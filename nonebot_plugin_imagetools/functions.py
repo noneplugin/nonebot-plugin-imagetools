@@ -76,19 +76,19 @@ def invert(img: BuildImage = Img(), arg=NoArg()):
 
 
 def contour(img: BuildImage = Img(), arg=NoArg()):
-    return img.filter(ImageFilter.CONTOUR).save_jpg()  # type: ignore
+    return img.filter(ImageFilter.CONTOUR).save_jpg()
 
 
 def emboss(img: BuildImage = Img(), arg=NoArg()):
-    return img.filter(ImageFilter.EMBOSS).save_jpg()  # type: ignore
+    return img.filter(ImageFilter.EMBOSS).save_jpg()
 
 
 def blur(img: BuildImage = Img(), arg=NoArg()):
-    return img.filter(ImageFilter.BLUR).save_jpg()  # type: ignore
+    return img.filter(ImageFilter.BLUR).save_jpg()
 
 
 def sharpen(img: BuildImage = Img(), arg=NoArg()):
-    return img.filter(ImageFilter.SHARPEN).save_jpg()  # type: ignore
+    return img.filter(ImageFilter.SHARPEN).save_jpg()
 
 
 def pixelate(img: BuildImage = Img(), arg: str = Arg()):

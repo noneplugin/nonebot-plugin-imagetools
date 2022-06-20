@@ -5,6 +5,7 @@ from nonebot.params import Depends
 from nonebot.matcher import Matcher
 from nonebot.typing import T_Handler
 from nonebot import on_command, require
+from nonebot.plugin import PluginMetadata
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
 require("nonebot_plugin_imageutils")
@@ -12,14 +13,17 @@ require("nonebot_plugin_imageutils")
 from .utils import Command
 from .data_source import commands
 
-
-__help__plugin_name__ = "imagetools"
-__des__ = "简单图片操作"
-__cmd__ = "支持的指令：\n" + "、".join([cmd.keywords[0] for cmd in commands])
-__example__ = """
-旋转 [图片]
-""".strip()
-__usage__ = f"{__des__}\n\nUsage:\n{__cmd__}\n\nExamples:\n{__example__}"
+__plugin_meta__ = PluginMetadata(
+    name="图片操作",
+    description="简单图片操作",
+    usage="支持的指令：\n" + "、".join([cmd.keywords[0] for cmd in commands]),
+    extra={
+        "unique_name": "imagetools",
+        "example": "旋转 [图片]",
+        "author": "meetwq <meetwq@gmail.com>",
+        "version": "0.1.1",
+    },
+)
 
 
 def create_matchers():
