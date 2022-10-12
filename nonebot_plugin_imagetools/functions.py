@@ -10,8 +10,13 @@ from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from .utils import save_gif
 from .depends import Arg, Img, NoArg
 
+from pathlib import Path
+import json
+
 colors = "|".join(colormap.keys())
 color_pattern = rf"#[a-fA-F0-9]{{6}}|{colors}"
+dir_path = Path(__file__).parent
+current_path = str(dir_path.absolute()) + "/"
 
 
 def flip_horizontal(img: BuildImage = Img(), arg=NoArg()):
@@ -112,10 +117,15 @@ def color_mask(img: BuildImage = Img(), arg: str = Arg()):
 
 
 def color_image(arg: str = Arg()):
+    cl = open(current_path + "colortable.txt", 'r',encoding="UTF-8")
+    color_table = json.loads(cl.read())
+    cl.close()
     if re.fullmatch(color_pattern, arg):
         return BuildImage.new("RGB", (500, 500), arg).save_jpg()
+    elif arg in color_table:
+        return BuildImage.new("RGB", (500, 500), color_table[arg]).save_jpg()
     else:
-        return "请使用正确的颜色格式，如：#66ccff、red"
+        return "请使用正确的颜色格式，如：#66ccff、red、红色"
 
 
 def gif_reverse(img: BuildImage = Img(), arg=NoArg()):
