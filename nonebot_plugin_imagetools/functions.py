@@ -7,6 +7,7 @@ from PIL import Image, ImageFilter, ImageOps
 from nonebot_plugin_imageutils import BuildImage, text2image
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
+from .color_table import color_table
 from .utils import save_gif
 from .depends import Arg, Img, NoArg
 
@@ -114,8 +115,10 @@ def color_mask(img: BuildImage = Img(), arg: str = Arg()):
 def color_image(arg: str = Arg()):
     if re.fullmatch(color_pattern, arg):
         return BuildImage.new("RGB", (500, 500), arg).save_jpg()
+    elif arg in color_table:
+        return BuildImage.new("RGB", (500, 500), color_table[arg]).save_jpg()
     else:
-        return "请使用正确的颜色格式，如：#66ccff、red"
+        return "请使用正确的颜色格式，如：#66ccff、red、红色"
 
 
 def gif_reverse(img: BuildImage = Img(), arg=NoArg()):
@@ -137,6 +140,21 @@ def gif_split(img: BuildImage = Img(), arg=NoArg()):
         for i in range(image.n_frames):
             image.seek(i)
             msg += MessageSegment.image(BuildImage(image.convert("RGB")).save_jpg())
+    return msg
+
+
+def four_grid(img: BuildImage = Img(), arg=NoArg()):
+    img = img.square()
+    l = img.width // 2
+    boxes = [
+        (0, 0, l, l),
+        (l, 0, l * 2, l),
+        (0, l, l, l * 2),
+        (l, l, l * 2, l * 2),
+    ]
+    msg = Message()
+    for box in boxes:
+        msg += MessageSegment.image(img.crop(box).save_jpg())
     return msg
 
 
