@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Optional
 from PIL.Image import Image as IMG
 from PIL.ImageColor import colormap
 from PIL import Image, ImageFilter, ImageOps
@@ -8,23 +8,23 @@ from nonebot_plugin_imageutils import BuildImage, text2image
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
 from .color_table import color_table
-from .utils import save_gif
 from .depends import Arg, Img, NoArg
+from .utils import save_gif, make_jpg_or_gif, Maker
 
 colors = "|".join(colormap.keys())
 color_pattern = rf"#[a-fA-F0-9]{{6}}|{colors}"
 
 
 def flip_horizontal(img: BuildImage = Img(), arg=NoArg()):
-    return img.transpose(Image.FLIP_LEFT_RIGHT).save_jpg()
+    return make_jpg_or_gif(img, lambda img: img.transpose(Image.FLIP_LEFT_RIGHT))
 
 
 def flip_vertical(img: BuildImage = Img(), arg=NoArg()):
-    return img.transpose(Image.FLIP_TOP_BOTTOM).save_jpg()
+    return make_jpg_or_gif(img, lambda img: img.transpose(Image.FLIP_TOP_BOTTOM))
 
 
 def grey(img: BuildImage = Img(), arg=NoArg()):
-    return img.convert("L").save_jpg()
+    return make_jpg_or_gif(img, lambda img: img.convert("L"))
 
 
 def rotate(img: BuildImage = Img(), arg: str = Arg()):
@@ -33,63 +33,72 @@ def rotate(img: BuildImage = Img(), arg: str = Arg()):
         angle = 90
     elif arg.isdigit():
         angle = int(arg)
-    if angle:
-        return img.rotate(angle, expand=True).save_jpg()
+    if not angle:
+        return
+    return make_jpg_or_gif(img, lambda img: img.rotate(angle, expand=True))
 
 
 def resize(img: BuildImage = Img(), arg: str = Arg()):
     w, h = img.size
     match1 = re.fullmatch(r"(\d{1,4})?[*xX, ](\d{1,4})?", arg)
     match2 = re.fullmatch(r"(\d{1,3})%", arg)
+    make: Optional[Maker] = None
     if match1:
         w = match1.group(1)
         h = match1.group(2)
         if not w and h:
-            return img.resize_height(int(h)).save_jpg()
+            make = lambda img: img.resize_height(int(h))
         elif w and not h:
-            return img.resize_width(int(w)).save_jpg()
+            make = lambda img: img.resize_width(int(w))
         elif w and h:
-            return img.resize((int(w), int(h))).save_jpg()
+            make = lambda img: img.resize((int(w), int(h)))
     elif match2:
         ratio = int(match2.group(1)) / 100
-        return img.resize((int(w * ratio), int(h * ratio))).save_jpg()
-    return "请使用正确的尺寸格式，如：100x100、100x、50%"
+        make = lambda img: img.resize((int(w * ratio), int(h * ratio)))
+    if not make:
+        return "请使用正确的尺寸格式，如：100x100、100x、50%"
+    return make_jpg_or_gif(img, make)
 
 
 def crop(img: BuildImage = Img(), arg: str = Arg()):
     w, h = img.size
     match1 = re.fullmatch(r"(\d{1,4})[*xX, ](\d{1,4})", arg)
     match2 = re.fullmatch(r"(\d{1,2})[:：比](\d{1,2})", arg)
+    make: Optional[Maker] = None
     if match1:
         w = int(match1.group(1))
         h = int(match1.group(2))
-        return img.resize_canvas((w, h), bg_color="white").save_jpg()
+        make = lambda img: img.resize_canvas((w, h), bg_color="white")
     elif match2:
         wp = int(match2.group(1))
         hp = int(match2.group(2))
         size = min(w / wp, h / hp)
-        return img.resize_canvas((int(wp * size), int(hp * size))).save_jpg()
-    return "请使用正确的裁剪格式，如：100x100、2:1"
+        make = lambda img: img.resize_canvas((int(wp * size), int(hp * size)))
+    if not make:
+        return "请使用正确的裁剪格式，如：100x100、2:1"
+    return make_jpg_or_gif(img, make)
 
 
 def invert(img: BuildImage = Img(), arg=NoArg()):
-    return BuildImage(ImageOps.invert(img.convert("RGB").image)).save_jpg()
+    return make_jpg_or_gif(
+        img, lambda img: BuildImage(ImageOps.invert(img.convert("RGB").image))
+    )
 
 
 def contour(img: BuildImage = Img(), arg=NoArg()):
-    return img.filter(ImageFilter.CONTOUR).save_jpg()
+    return make_jpg_or_gif(img, lambda img: img.filter(ImageFilter.CONTOUR))
 
 
 def emboss(img: BuildImage = Img(), arg=NoArg()):
-    return img.filter(ImageFilter.EMBOSS).save_jpg()
+    return make_jpg_or_gif(img, lambda img: img.filter(ImageFilter.EMBOSS))
 
 
 def blur(img: BuildImage = Img(), arg=NoArg()):
-    return img.filter(ImageFilter.BLUR).save_jpg()
+    return make_jpg_or_gif(img, lambda img: img.filter(ImageFilter.BLUR))
 
 
 def sharpen(img: BuildImage = Img(), arg=NoArg()):
-    return img.filter(ImageFilter.SHARPEN).save_jpg()
+    return make_jpg_or_gif(img, lambda img: img.filter(ImageFilter.SHARPEN))
 
 
 def pixelate(img: BuildImage = Img(), arg: str = Arg()):
@@ -98,27 +107,36 @@ def pixelate(img: BuildImage = Img(), arg: str = Arg()):
         num = 8
     elif arg.isdigit():
         num = int(arg)
-    if num:
+    if not num:
+        return
+
+    def make(img: BuildImage) -> BuildImage:
         image = img.image
         image = image.resize((img.width // num, img.height // num), resample=0)
         image = image.resize(img.size, resample=0)
-        return BuildImage(image).save_jpg()
+        return BuildImage(image)
+
+    return make_jpg_or_gif(img, make)
 
 
 def color_mask(img: BuildImage = Img(), arg: str = Arg()):
     if re.fullmatch(color_pattern, arg):
-        return img.color_mask(arg).save_jpg()
+        color = arg
+    elif arg in color_table:
+        color = color_table[arg]
     else:
-        return "请使用正确的颜色格式，如：#66ccff、red"
+        return "请使用正确的颜色格式，如：#66ccff、red、红色"
+    return make_jpg_or_gif(img, lambda img: img.color_mask(color))
 
 
 def color_image(arg: str = Arg()):
     if re.fullmatch(color_pattern, arg):
-        return BuildImage.new("RGB", (500, 500), arg).save_jpg()
+        color = arg
     elif arg in color_table:
-        return BuildImage.new("RGB", (500, 500), color_table[arg]).save_jpg()
+        color = color_table[arg]
     else:
         return "请使用正确的颜色格式，如：#66ccff、red、红色"
+    return BuildImage.new("RGB", (500, 500), color).save_jpg()
 
 
 def gif_reverse(img: BuildImage = Img(), arg=NoArg()):
