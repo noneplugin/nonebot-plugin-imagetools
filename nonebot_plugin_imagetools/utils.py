@@ -1,6 +1,5 @@
 import httpx
 import asyncio
-import imageio
 from io import BytesIO
 from dataclasses import dataclass
 from PIL.Image import Image as IMG
@@ -18,7 +17,15 @@ class Command:
 
 def save_gif(frames: List[IMG], duration: float) -> BytesIO:
     output = BytesIO()
-    imageio.mimsave(output, frames, format="gif", duration=duration)
+    frames[0].save(
+        output,
+        format="GIF",
+        save_all=True,
+        append_images=frames[1:],
+        duration=duration * 1000,
+        loop=0,
+        disposal=2,
+    )
     return output
 
 
@@ -54,7 +61,7 @@ def make_jpg_or_gif(img: BuildImage, func: Maker) -> BytesIO:
     """
     制作静图或者动图
     :params
-      * ``img``: 输入图片，如头像
+      * ``img``: 输入图片
       * ``func``: 图片处理函数，输入img，返回处理后的图片
     """
     image = img.image
@@ -62,8 +69,14 @@ def make_jpg_or_gif(img: BuildImage, func: Maker) -> BytesIO:
         return func(img.convert("RGBA")).save_jpg()
     else:
         duration = get_avg_duration(image) / 1000
+        image.seek(0)
+        transparency = image.info.get("transparency", 0)
         frames: List[IMG] = []
         for i in range(image.n_frames):
             image.seek(i)
-            frames.append(func(BuildImage(image).convert("RGBA")).image)
+            background = image.info.get("background", transparency)
+            new_image = func(BuildImage(image).convert("RGBA")).image
+            new_image.info["background"] = background
+            frames.append(new_image)
+        frames[0].info["transparency"] = transparency
         return save_gif(frames, duration)

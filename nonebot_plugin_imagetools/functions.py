@@ -9,7 +9,7 @@ from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
 from .color_table import color_table
 from .depends import Arg, Img, NoArg
-from .utils import save_gif, make_jpg_or_gif, Maker
+from .utils import save_gif, make_jpg_or_gif, Maker, get_avg_duration
 
 colors = "|".join(colormap.keys())
 color_pattern = rf"#[a-fA-F0-9]{{6}}|{colors}"
@@ -142,12 +142,14 @@ def color_image(arg: str = Arg()):
 def gif_reverse(img: BuildImage = Img(), arg=NoArg()):
     image = img.image
     if getattr(image, "is_animated", False):
-        duration = image.info["duration"] / 1000
+        duration = get_avg_duration(image) / 1000
+        image.seek(0)
+        transparency = image.info.get("transparency", 0)
         frames: List[IMG] = []
-        for i in range(image.n_frames):
+        for i in reversed(range(image.n_frames)):
             image.seek(i)
-            frames.append(image.convert("RGB"))
-        frames.reverse()
+            frames.append(image.convert("RGBA"))
+        frames[0].info["transparency"] = transparency
         return save_gif(frames, duration)
 
 
