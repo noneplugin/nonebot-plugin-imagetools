@@ -152,27 +152,34 @@ def gif_reverse(img: BuildImage = Img(), arg=NoArg()):
         frames[0].info["transparency"] = transparency
         return save_gif(frames, duration)
 
+
 def gif_obverse_reverse(img: BuildImage = Img(), arg=NoArg()):
     image = img.image
     if getattr(image, "is_animated", False):
-        duration = image.info["duration"] / 1000
+        duration = get_avg_duration(image) / 1000
+        image.seek(0)
+        transparency = image.info.get("transparency", 0)
         frames: List[IMG] = []
         for i in range(image.n_frames):
             image.seek(i)
-            frames.append(image.convert("RGB"))
+            frames.append(image.convert("RGBA"))
         frames = frames + frames[::-1]
+        frames[0].info["transparency"] = transparency
         return save_gif(frames, duration)
 
 
 def gif_reverse_obverse(img: BuildImage = Img(), arg=NoArg()):
     image = img.image
     if getattr(image, "is_animated", False):
-        duration = image.info["duration"] / 1000
+        duration = get_avg_duration(image) / 1000
+        image.seek(0)
+        transparency = image.info.get("transparency", 0)
         frames: List[IMG] = []
         for i in range(image.n_frames):
             image.seek(i)
-            frames.append(image.convert("RGB"))
+            frames.append(image.convert("RGBA"))
         frames = frames[::-1] + frames
+        frames[0].info["transparency"] = transparency
         return save_gif(frames, duration)
 
 
