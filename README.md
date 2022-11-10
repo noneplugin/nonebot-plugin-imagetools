@@ -17,6 +17,10 @@ nb plugin install nonebot_plugin_imagetools
 pip install nonebot_plugin_imagetools
 ```
 
+本插件使用了 [go-cqhttp](https://github.com/Mrs4s/go-cqhttp) 的 `send_group_forward_msg` 和 `send_private_forward_msg` 接口 来发送合并转发消息，
+
+发送私聊合并转发消息需要使用 `v1.0.0-rc2` 版本以上的 go-cqhttp
+
 
 ### 使用
 
@@ -34,6 +38,7 @@ pip install nonebot_plugin_imagetools
  - 缩放 + 尺寸或百分比，如：`缩放 100x100`；`缩放 200x`；`缩放 150%`
  - 裁剪 + 尺寸或比例，如：`裁剪 100x100`；`裁剪 2:1`
  - 反相/反色
+ - 灰度图/黑白
  - 轮廓
  - 浮雕
  - 模糊
@@ -42,6 +47,7 @@ pip install nonebot_plugin_imagetools
  - 颜色滤镜 + 16进制颜色代码 或 颜色名称，如：`颜色滤镜 #66ccff`；`颜色滤镜 green`
  - 纯色图 + 16进制颜色代码 或 颜色名称
  - gif倒放/倒放
+ - gif正放倒放/正放倒放
  - gif分解
  - 九宫格
  - 文字转图 + 文字，支持少量BBcode

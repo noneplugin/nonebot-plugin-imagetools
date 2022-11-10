@@ -9,7 +9,13 @@ from nonebot.matcher import Matcher
 from nonebot.typing import T_Handler
 from nonebot import on_command, require
 from nonebot.plugin import PluginMetadata
-from nonebot.adapters.onebot.v11 import Message, MessageSegment
+from nonebot.adapters.onebot.v11 import (
+    Message,
+    MessageSegment,
+    Bot,
+    MessageEvent,
+    GroupMessageEvent,
+)
 
 require("nonebot_plugin_imageutils")
 from nonebot_plugin_imageutils import BuildImage, Text2Image
@@ -28,6 +34,8 @@ __plugin_meta__ = PluginMetadata(
         "version": "0.1.3",
     },
 )
+
+FORWARD_TYPE = List[Union[str, Message, MessageSegment]]
 
 
 help_cmd = on_command("图片操作", aliases={"图片工具"}, block=True, priority=12)
@@ -72,13 +80,18 @@ async def _():
 def create_matchers():
     def handler(command: Command) -> T_Handler:
         async def handle(
+            bot: Bot,
+            event: MessageEvent,
             matcher: Matcher,
-            res: Union[str, BytesIO, Message, MessageSegment] = Depends(command.func),
+            res: Union[str, BytesIO, List[BytesIO]] = Depends(command.func),
         ):
-            if isinstance(res, BytesIO):
+            if isinstance(res, str):
+                await matcher.finish(res)
+            elif isinstance(res, BytesIO):
                 await matcher.finish(MessageSegment.image(res))
             else:
-                await matcher.finish(res)
+                msgs: FORWARD_TYPE = [MessageSegment.image(msg) for msg in res]
+                await send_forward_msg(bot, event, "imagetools", bot.self_id, msgs)
 
         return handle
 
@@ -92,3 +105,24 @@ def create_matchers():
 
 
 create_matchers()
+
+
+async def send_forward_msg(
+    bot: Bot,
+    event: MessageEvent,
+    name: str,
+    uin: str,
+    msgs: FORWARD_TYPE,
+):
+    def to_json(msg):
+        return {"type": "node", "data": {"name": name, "uin": uin, "content": msg}}
+
+    messages = [to_json(msg) for msg in msgs]
+    if isinstance(event, GroupMessageEvent):
+        await bot.call_api(
+            "send_group_forward_msg", group_id=event.group_id, messages=messages
+        )
+    else:
+        await bot.call_api(
+            "send_private_forward_msg", user_id=event.user_id, messages=messages
+        )

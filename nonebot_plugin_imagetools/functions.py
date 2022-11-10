@@ -1,11 +1,11 @@
 import re
+from io import BytesIO
 from typing import List, Optional
 from PIL.Image import Image as IMG
 from PIL.ImageColor import colormap
 from PIL import Image, ImageFilter, ImageOps
 
 from nonebot_plugin_imageutils import BuildImage, text2image
-from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
 from .color_table import color_table
 from .depends import Arg, Img, NoArg
@@ -169,12 +169,12 @@ def gif_obverse_reverse(img: BuildImage = Img(), arg=NoArg()):
 
 def gif_split(img: BuildImage = Img(), arg=NoArg()):
     image = img.image
-    msg = Message()
+    output: List[BytesIO] = []
     if getattr(image, "is_animated", False):
         for i in range(image.n_frames):
             image.seek(i)
-            msg += MessageSegment.image(BuildImage(image.convert("RGB")).save_jpg())
-    return msg
+            output.append(BuildImage(image.convert("RGB")).save_png())
+    return output
 
 
 def four_grid(img: BuildImage = Img(), arg=NoArg()):
@@ -186,10 +186,10 @@ def four_grid(img: BuildImage = Img(), arg=NoArg()):
         (0, l, l, l * 2),
         (l, l, l * 2, l * 2),
     ]
-    msg = Message()
+    output: List[BytesIO] = []
     for box in boxes:
-        msg += MessageSegment.image(img.crop(box).save_jpg())
-    return msg
+        output.append(img.crop(box).save_png())
+    return output
 
 
 def nine_grid(img: BuildImage = Img(), arg=NoArg()):
@@ -207,10 +207,10 @@ def nine_grid(img: BuildImage = Img(), arg=NoArg()):
         (l, l * 2, l * 2, w),
         (l * 2, l * 2, w, w),
     ]
-    msg = Message()
+    output: List[BytesIO] = []
     for box in boxes:
-        msg += MessageSegment.image(img.crop(box).save_jpg())
-    return msg
+        output.append(img.crop(box).save_png())
+    return output
 
 
 def t2p(arg: str = Arg()):

@@ -4,6 +4,7 @@ from .functions import *
 commands = [
     Command(("水平翻转", "左翻", "右翻"), flip_horizontal),
     Command(("竖直翻转", "上翻", "下翻"), flip_vertical),
+    Command(("灰度图", "黑白"), grey),
     Command(("旋转",), rotate),
     Command(("缩放",), resize),
     Command(("裁剪",), crop),
