@@ -31,7 +31,7 @@ __plugin_meta__ = PluginMetadata(
         "unique_name": "imagetools",
         "example": "旋转 [图片]",
         "author": "meetwq <meetwq@gmail.com>",
-        "version": "0.1.3",
+        "version": "0.1.4",
     },
 )
 
