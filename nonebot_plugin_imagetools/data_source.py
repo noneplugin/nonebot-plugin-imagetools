@@ -16,6 +16,8 @@ commands = [
     Command(("颜色滤镜",), color_mask),
     Command(("纯色图",), color_image),
     Command(("gif倒放", "倒放"), gif_reverse),
+    Command(("gif正放倒放", "正放倒放"), gif_obverse_reverse),
+    Command(("gif倒放正放", "倒放正放"), gif_reverse_obverse),
     Command(("gif分解",), gif_split),
     Command(("四宫格",), four_grid),
     Command(("九宫格",), nine_grid),
