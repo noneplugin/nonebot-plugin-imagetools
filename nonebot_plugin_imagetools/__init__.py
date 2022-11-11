@@ -1,7 +1,12 @@
 import math
+import asyncio
+import random
+import datetime
 from io import BytesIO
 from typing import List, Union
 from PIL.Image import Image as IMG
+from pathlib import Path
+from zipfile import ZipFile, ZIP_BZIP2
 
 from nonebot.params import Depends
 from nonebot.utils import run_sync
@@ -22,6 +27,7 @@ from nonebot_plugin_imageutils import BuildImage, Text2Image
 
 from .utils import Command
 from .data_source import commands
+from .config import imagetools_config
 
 __plugin_meta__ = PluginMetadata(
     name="图片操作",
@@ -91,7 +97,13 @@ def create_matchers():
                 await matcher.finish(MessageSegment.image(res))
             else:
                 msgs: FORWARD_TYPE = [MessageSegment.image(msg) for msg in res]
-                await send_forward_msg(bot, event, "imagetools", bot.self_id, msgs)
+                if len(msgs):
+                    await send_forward_msg(bot, event, imagetools_config.nickname[0], bot.self_id, msgs)
+                    if imagetools_config.imagetools_upload_file:
+                        await bot.send(event=event, message="\n图片制作完成，正在发送压缩包，请稍等...", at_sender=True)
+                        await upload_file(bot, event, command.keywords[0], res)
+                else:
+                    await matcher.finish("未生成任何内容", at_sender=True)
 
         return handle
 
@@ -118,11 +130,35 @@ async def send_forward_msg(
         return {"type": "node", "data": {"name": name, "uin": uin, "content": msg}}
 
     messages = [to_json(msg) for msg in msgs]
+    MAX_MESSAGES_NUM = imagetools_config.max_messages_num
+    while len(messages):
+        if isinstance(event, GroupMessageEvent):
+            await bot.send_group_forward_msg(group_id=event.group_id, messages=messages[:MAX_MESSAGES_NUM])
+        else:
+            await bot.send_private_forward_msg(user_id=event.user_id, messages=messages[:MAX_MESSAGES_NUM])
+        messages = messages[MAX_MESSAGES_NUM:]
+        await asyncio.sleep(random.randint(3,5))
+
+
+async def upload_file(
+    bot: Bot,
+    event: MessageEvent,
+    name: str,
+    res: Union[str, BytesIO, List[BytesIO]],
+    format: str = "png",
+):
+    filename = f"{name}{int(datetime.datetime.now().timestamp())}.zip"
+    file_path = Path(__file__).with_name(filename)
+    """
+    这里手动指定了文件类型，因为目前类型就PNG
+    PIL的文件类型判断非常不稳定，建议手动指定，就先不改了
+    """
+    with ZipFile(file_path, "w", ZIP_BZIP2) as myzip:
+        for r in range(len(res)):
+            zip_filename = f"{r}.{format}"
+            myzip.writestr(zip_filename, res[r].getbuffer())
     if isinstance(event, GroupMessageEvent):
-        await bot.call_api(
-            "send_group_forward_msg", group_id=event.group_id, messages=messages
-        )
+        await bot.upload_group_file(group_id=event.group_id,file=str(file_path),name=filename)
     else:
-        await bot.call_api(
-            "send_private_forward_msg", user_id=event.user_id, messages=messages
-        )
+        await bot.upload_private_file(user_id=event.user_id,file=str(file_path),name=filename)
+    file_path.unlink()
