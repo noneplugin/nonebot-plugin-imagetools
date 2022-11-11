@@ -38,11 +38,9 @@ __plugin_meta__ = PluginMetadata(
         "unique_name": "imagetools",
         "example": "旋转 [图片]",
         "author": "meetwq <meetwq@gmail.com>",
-        "version": "0.1.4",
+        "version": "0.1.5",
     },
 )
-
-FORWARD_TYPE = List[Union[str, Message, MessageSegment]]
 
 
 help_cmd = on_command("图片操作", aliases={"图片工具"}, block=True, priority=12)
@@ -102,14 +100,14 @@ def create_matchers():
                     filename = f"{command.keywords[0]}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.zip"
                     try:
                         await upload_file(bot, event, zip_file, filename)
-                        return
                     except:
-                        logger.warning("上传文件失败，采用合并转发消息发送")
+                        logger.warning("上传文件失败")
 
                 msgs: List[Message] = [
                     Message(MessageSegment.image(msg)) for msg in res
                 ]
                 max_forward_msg_num = imagetools_config.max_forward_msg_num
+                # 超出最大转发消息条数时，改为一条消息包含多张图片
                 if len(msgs) > max_forward_msg_num:
                     step = math.ceil(len(msgs) / max_forward_msg_num)
                     msgs = [
