@@ -1,11 +1,11 @@
 import math
-import asyncio
-import random
-import datetime
+import imghdr
+import tempfile
 from io import BytesIO
+from itertools import chain
+from datetime import datetime
 from typing import List, Union
 from PIL.Image import Image as IMG
-from pathlib import Path
 from zipfile import ZipFile, ZIP_BZIP2
 
 from nonebot.params import Depends
@@ -21,6 +21,7 @@ from nonebot.adapters.onebot.v11 import (
     MessageEvent,
     GroupMessageEvent,
 )
+from nonebot.log import logger
 
 require("nonebot_plugin_imageutils")
 from nonebot_plugin_imageutils import BuildImage, Text2Image
@@ -96,14 +97,26 @@ def create_matchers():
             elif isinstance(res, BytesIO):
                 await matcher.finish(MessageSegment.image(res))
             else:
-                msgs: FORWARD_TYPE = [MessageSegment.image(msg) for msg in res]
-                if len(msgs):
-                    await send_forward_msg(bot, event, imagetools_config.nickname[0], bot.self_id, msgs)
-                    if imagetools_config.imagetools_upload_file:
-                        await bot.send(event=event, message="\n图片制作完成，正在发送压缩包，请稍等...", at_sender=True)
-                        await upload_file(bot, event, command.keywords[0], res)
-                else:
-                    await matcher.finish("未生成任何内容", at_sender=True)
+                if len(res) > imagetools_config.imagetools_zip_threshold:
+                    zip_file = zip_images(res)
+                    filename = f"{command.keywords[0]}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.zip"
+                    try:
+                        await upload_file(bot, event, zip_file, filename)
+                        return
+                    except:
+                        logger.warning("上传文件失败，采用合并转发消息发送")
+
+                msgs: List[Message] = [
+                    Message(MessageSegment.image(msg)) for msg in res
+                ]
+                max_forward_msg_num = imagetools_config.max_forward_msg_num
+                if len(msgs) > max_forward_msg_num:
+                    step = math.ceil(len(msgs) / max_forward_msg_num)
+                    msgs = [
+                        Message(chain.from_iterable(msgs[i : i + step]))
+                        for i in range(0, len(msgs) - 1, step)
+                    ]
+                await send_forward_msg(bot, event, "imagetools", bot.self_id, msgs)
 
         return handle
 
@@ -124,41 +137,45 @@ async def send_forward_msg(
     event: MessageEvent,
     name: str,
     uin: str,
-    msgs: FORWARD_TYPE,
+    msgs: List[Message],
 ):
     def to_json(msg):
         return {"type": "node", "data": {"name": name, "uin": uin, "content": msg}}
 
     messages = [to_json(msg) for msg in msgs]
-    MAX_MESSAGES_NUM = imagetools_config.max_messages_num
-    while len(messages):
-        if isinstance(event, GroupMessageEvent):
-            await bot.send_group_forward_msg(group_id=event.group_id, messages=messages[:MAX_MESSAGES_NUM])
-        else:
-            await bot.send_private_forward_msg(user_id=event.user_id, messages=messages[:MAX_MESSAGES_NUM])
-        messages = messages[MAX_MESSAGES_NUM:]
-        await asyncio.sleep(random.randint(3,5))
+    if isinstance(event, GroupMessageEvent):
+        await bot.call_api(
+            "send_group_forward_msg", group_id=event.group_id, messages=messages
+        )
+    else:
+        await bot.call_api(
+            "send_private_forward_msg", user_id=event.user_id, messages=messages
+        )
+
+
+def zip_images(files: List[BytesIO]):
+    output = BytesIO()
+    with ZipFile(output, "w", ZIP_BZIP2) as zip_file:
+        for i, file in enumerate(files):
+            file_bytes = file.getvalue()
+            ext = imghdr.what(None, h=file_bytes)
+            zip_file.writestr(f"{i}.{ext}", file_bytes)
+    return output
 
 
 async def upload_file(
     bot: Bot,
     event: MessageEvent,
-    name: str,
-    res: Union[str, BytesIO, List[BytesIO]],
-    format: str = "png",
+    file: BytesIO,
+    filename: str,
 ):
-    filename = f"{name}{int(datetime.datetime.now().timestamp())}.zip"
-    file_path = Path(__file__).with_name(filename)
-    """
-    这里手动指定了文件类型，因为目前类型就PNG
-    PIL的文件类型判断非常不稳定，建议手动指定，就先不改了
-    """
-    with ZipFile(file_path, "w", ZIP_BZIP2) as myzip:
-        for r in range(len(res)):
-            zip_filename = f"{r}.{format}"
-            myzip.writestr(zip_filename, res[r].getbuffer())
-    if isinstance(event, GroupMessageEvent):
-        await bot.upload_group_file(group_id=event.group_id,file=str(file_path),name=filename)
-    else:
-        await bot.upload_private_file(user_id=event.user_id,file=str(file_path),name=filename)
-    file_path.unlink()
+    with tempfile.NamedTemporaryFile("wb+") as f:
+        f.write(file.getbuffer())
+        if isinstance(event, GroupMessageEvent):
+            await bot.call_api(
+                "upload_group_file", group_id=event.group_id, file=f.name, name=filename
+            )
+        else:
+            await bot.call_api(
+                "upload_private_file", user_id=event.user_id, file=f.name, name=filename
+            )

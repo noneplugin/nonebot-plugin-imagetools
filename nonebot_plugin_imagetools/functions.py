@@ -169,12 +169,12 @@ def gif_obverse_reverse(img: BuildImage = Img(), arg=NoArg()):
 
 def gif_split(img: BuildImage = Img(), arg=NoArg()):
     image = img.image
-    output: List[BytesIO] = []
     if getattr(image, "is_animated", False):
+        output: List[BytesIO] = []
         for i in range(image.n_frames):
             image.seek(i)
             output.append(BuildImage(image.convert("RGB")).save_png())
-    return output
+        return output
 
 
 def four_grid(img: BuildImage = Img(), arg=NoArg()):

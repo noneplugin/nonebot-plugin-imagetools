@@ -1,11 +1,17 @@
 from pydantic import BaseModel, Extra
-from typing import List
 
 from nonebot import get_driver
 
+
 class Config(BaseModel, extra=Extra.ignore):
-    nickname: List[str] = ["Bot"]
-    max_messages_num: int = 99
-    imagetools_upload_file: bool = False
+    imagetools_zip_threshold: int = 20
+    """
+    输出图片数量大于该数目时，打包为zip以文件形式发送
+    """
+    max_forward_msg_num: int = 99
+    """
+    合并转发消息条数上限
+    """
+
 
 imagetools_config = Config.parse_obj(get_driver().config.dict())
