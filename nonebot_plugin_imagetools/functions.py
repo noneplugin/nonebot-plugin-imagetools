@@ -148,7 +148,7 @@ def gif_reverse(img: BuildImage = Img(), arg=NoArg()):
         frames: List[IMG] = []
         for i in reversed(range(image.n_frames)):
             image.seek(i)
-            frames.append(image.convert("RGBA"))
+            frames.append(image)
         frames[0].info["transparency"] = transparency
         return save_gif(frames, duration)
 
@@ -160,7 +160,7 @@ def gif_obverse_reverse(img: BuildImage = Img(), arg=NoArg()):
         frames: List[IMG] = []
         for i in range(image.n_frames):
             image.seek(i)
-            frames.append(image.convert("RGBA"))
+            frames.append(image)
         frames = frames + frames[::-1]
         image.seek(0)
         frames[0].info["transparency"] = image.info.get("transparency", 0)
@@ -173,7 +173,7 @@ def gif_split(img: BuildImage = Img(), arg=NoArg()):
         output: List[BytesIO] = []
         for i in range(image.n_frames):
             image.seek(i)
-            output.append(BuildImage(image.convert("RGB")).save_png())
+            output.append(BuildImage(image).save_png())
         return output
 
 

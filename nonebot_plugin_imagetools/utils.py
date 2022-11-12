@@ -69,13 +69,13 @@ def make_jpg_or_gif(
     """
     image = img.image
     if not getattr(image, "is_animated", False):
-        return func(img.convert("RGBA")).save_jpg()
+        return func(img).save_jpg()
     else:
         duration = get_avg_duration(image) / 1000
         frames: List[IMG] = []
         for i in range(image.n_frames):
             image.seek(i)
-            frames.append(func(BuildImage(image).convert("RGBA")).image)
+            frames.append(func(BuildImage(image)).image)
         if keep_transparency:
             image.seek(0)
             frames[0].info["transparency"] = image.info.get("transparency", 0)
