@@ -12,8 +12,10 @@ from .depends import Arg, Img, NoArg
 from .utils import save_gif, make_jpg_or_gif, Maker, get_avg_duration
 
 colors = "|".join(colormap.keys())
-color_pattern_256 = r"((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]?[0-9])\s+(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]?[0-9])\s+(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]?[0-9]))"
-color_pattern = rf"(#[a-fA-F0-9]{{6}})|{color_pattern_256}|{colors}"
+color_pattern_str = rf"#[a-fA-F0-9]{{6}}|{colors}"
+
+num_256 = r"(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]?[0-9])"
+color_pattern_num = rf"(?:rgb)?\(?\s*{num_256}[\s,]+{num_256}[\s,]+{num_256}\s*\)?;?"
 
 
 def flip_horizontal(img: BuildImage = Img(), arg=NoArg()):
@@ -121,11 +123,10 @@ def pixelate(img: BuildImage = Img(), arg: str = Arg()):
 
 
 def color_mask(img: BuildImage = Img(), arg: str = Arg()):
-    if re.fullmatch(color_pattern, arg):
-        if len(arg.split()) == 1:
-            color = arg
-        else:
-            color = tuple(map(int,arg.split()))
+    if re.fullmatch(color_pattern_str, arg):
+        color = arg
+    elif match := re.fullmatch(color_pattern_num, arg):
+        color = tuple(map(int, match.groups()))
     elif arg in color_table:
         color = color_table[arg]
     else:
@@ -134,11 +135,10 @@ def color_mask(img: BuildImage = Img(), arg: str = Arg()):
 
 
 def color_image(arg: str = Arg()):
-    if re.fullmatch(color_pattern, arg):
-        if len(arg.split()) == 1:
-            color = arg
-        else:
-            color = tuple(map(int,arg.split()))
+    if re.fullmatch(color_pattern_str, arg):
+        color = arg
+    elif match := re.fullmatch(color_pattern_num, arg):
+        color = tuple(map(int, match.groups()))
     elif arg in color_table:
         color = color_table[arg]
     else:
