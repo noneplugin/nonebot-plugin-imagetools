@@ -12,7 +12,8 @@ from .depends import Arg, Img, NoArg
 from .utils import save_gif, make_jpg_or_gif, Maker, get_avg_duration
 
 colors = "|".join(colormap.keys())
-color_pattern = rf"#[a-fA-F0-9]{{6}}|{colors}"
+color_pattern_256 = r"((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]?[0-9])\s+(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]?[0-9])\s+(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]?[0-9]))"
+color_pattern = rf"(#[a-fA-F0-9]{{6}})|{color_pattern_256}|{colors}"
 
 
 def flip_horizontal(img: BuildImage = Img(), arg=NoArg()):
@@ -121,21 +122,27 @@ def pixelate(img: BuildImage = Img(), arg: str = Arg()):
 
 def color_mask(img: BuildImage = Img(), arg: str = Arg()):
     if re.fullmatch(color_pattern, arg):
-        color = arg
+        if len(arg.split()) == 1:
+            color = arg
+        else:
+            color = tuple(map(int,arg.split()))
     elif arg in color_table:
         color = color_table[arg]
     else:
-        return "请使用正确的颜色格式，如：#66ccff、red、红色"
+        return "请使用正确的颜色格式，如：#66ccff、red、红色、102 204 255"
     return make_jpg_or_gif(img, lambda img: img.color_mask(color))
 
 
 def color_image(arg: str = Arg()):
     if re.fullmatch(color_pattern, arg):
-        color = arg
+        if len(arg.split()) == 1:
+            color = arg
+        else:
+            color = tuple(map(int,arg.split()))
     elif arg in color_table:
         color = color_table[arg]
     else:
-        return "请使用正确的颜色格式，如：#66ccff、red、红色"
+        return "请使用正确的颜色格式，如：#66ccff、red、红色、102 204 255"
     return BuildImage.new("RGB", (500, 500), color).save_jpg()
 
 
