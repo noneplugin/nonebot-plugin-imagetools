@@ -9,7 +9,7 @@ from nonebot_plugin_imageutils import BuildImage, text2image
 
 from .color_table import color_table
 from .depends import Arg, Img, NoArg
-from .utils import save_gif, make_jpg_or_gif, Maker, get_avg_duration
+from .utils import save_gif, make_jpg_or_gif, Maker, get_avg_duration, split_gif
 
 colors = "|".join(colormap.keys())
 color_pattern_str = rf"#[a-fA-F0-9]{{6}}|{colors}"
@@ -27,7 +27,7 @@ def flip_vertical(img: BuildImage = Img(), arg=NoArg()):
 
 
 def grey(img: BuildImage = Img(), arg=NoArg()):
-    return make_jpg_or_gif(img, lambda img: img.convert("L"))
+    return make_jpg_or_gif(img, lambda img: img.convert("L"), keep_transparency=False)
 
 
 def rotate(img: BuildImage = Img(), arg: str = Arg()):
@@ -83,9 +83,12 @@ def crop(img: BuildImage = Img(), arg: str = Arg()):
 
 
 def invert(img: BuildImage = Img(), arg=NoArg()):
-    return make_jpg_or_gif(
-        img, lambda img: BuildImage(ImageOps.invert(img.convert("RGB").image))
-    )
+    def make(img: BuildImage) -> BuildImage:
+        result = BuildImage.new("RGB", img.size, "white")
+        result.paste(img, alpha=True)
+        return BuildImage(ImageOps.invert(result.image))
+
+    return make_jpg_or_gif(img, make, keep_transparency=False)
 
 
 def contour(img: BuildImage = Img(), arg=NoArg()):
@@ -149,39 +152,25 @@ def color_image(arg: str = Arg()):
 def gif_reverse(img: BuildImage = Img(), arg=NoArg()):
     image = img.image
     if getattr(image, "is_animated", False):
+        frames = split_gif(image)
         duration = get_avg_duration(image) / 1000
-        image.seek(0)
-        transparency = image.info.get("transparency", 0)
-        frames: List[IMG] = []
-        for i in reversed(range(image.n_frames)):
-            image.seek(i)
-            frames.append(image)
-        frames[0].info["transparency"] = transparency
-        return save_gif(frames, duration)
+        return save_gif(frames[::-1], duration)
 
 
 def gif_obverse_reverse(img: BuildImage = Img(), arg=NoArg()):
     image = img.image
     if getattr(image, "is_animated", False):
+        frames = split_gif(image)
         duration = get_avg_duration(image) / 1000
-        frames: List[IMG] = []
-        for i in range(image.n_frames):
-            image.seek(i)
-            frames.append(image)
-        frames = frames + frames[::-1]
-        image.seek(0)
-        frames[0].info["transparency"] = image.info.get("transparency", 0)
+        frames = frames + frames[-2::-1]
         return save_gif(frames, duration)
 
 
 def gif_split(img: BuildImage = Img(), arg=NoArg()):
     image = img.image
     if getattr(image, "is_animated", False):
-        output: List[BytesIO] = []
-        for i in range(image.n_frames):
-            image.seek(i)
-            output.append(BuildImage(image).save_png())
-        return output
+        frames = split_gif(image)
+        return [BuildImage(frame).save_png() for frame in frames]
 
 
 def four_grid(img: BuildImage = Img(), arg=NoArg()):

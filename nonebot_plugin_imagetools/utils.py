@@ -3,7 +3,7 @@ import asyncio
 from io import BytesIO
 from dataclasses import dataclass
 from PIL.Image import Image as IMG
-from typing import Callable, List, Protocol, Tuple
+from typing import Callable, List, Protocol, Tuple, Optional
 
 from nonebot.log import logger
 from nonebot_plugin_imageutils import BuildImage
@@ -25,6 +25,7 @@ def save_gif(frames: List[IMG], duration: float) -> BytesIO:
         duration=duration * 1000,
         loop=0,
         disposal=2,
+        optimize=False,
     )
     return output
 
@@ -57,6 +58,29 @@ def get_avg_duration(image: IMG) -> float:
     return total_duration / image.n_frames
 
 
+def split_gif(image: IMG) -> List[IMG]:
+    frames: List[IMG] = []
+
+    update_mode = "full"
+    for i in range(image.n_frames):
+        image.seek(i)
+        if image.tile:  # type: ignore
+            update_region = image.tile[0][1][2:]  # type: ignore
+            if update_region != image.size:
+                update_mode = "partial"
+                break
+
+    last_frame: Optional[IMG] = None
+    for i in range(image.n_frames):
+        image.seek(i)
+        frame = image.copy()
+        if update_mode == "partial" and last_frame:
+            frame = last_frame.copy().paste(frame)
+        frame.info["transparency"] = frame.info.get("transparency", 255)
+        frames.append(frame)
+    return frames
+
+
 def make_jpg_or_gif(
     img: BuildImage, func: Maker, keep_transparency: bool = True
 ) -> BytesIO:
@@ -71,12 +95,10 @@ def make_jpg_or_gif(
     if not getattr(image, "is_animated", False):
         return func(img).save_jpg()
     else:
+        frames = split_gif(image)
         duration = get_avg_duration(image) / 1000
-        frames: List[IMG] = []
-        for i in range(image.n_frames):
-            image.seek(i)
-            frames.append(func(BuildImage(image)).image)
+        frames = [func(BuildImage(frame)).image for frame in frames]
         if keep_transparency:
             image.seek(0)
-            frames[0].info["transparency"] = image.info.get("transparency", 0)
+            frames[0].info["transparency"] = image.info.get("transparency", 255)
         return save_gif(frames, duration)
