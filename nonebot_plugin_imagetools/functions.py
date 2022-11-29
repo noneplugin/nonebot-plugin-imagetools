@@ -166,6 +166,23 @@ def gif_obverse_reverse(img: BuildImage = Img(), arg=NoArg()):
         return save_gif(frames, duration)
 
 
+def gif_change_fps(img: BuildImage = Img(), arg: str = Arg()):
+    image = img.image
+    if not getattr(image, "is_animated", False):
+        return
+    match1 = re.fullmatch(r"([\d\.]{1,4})(?:x|X|倍速?)", arg)
+    match2 = re.fullmatch(r"(\d{1,3})%", arg)
+    duration = get_avg_duration(image) / 1000
+    if match1:
+        duration /= float(match1.group(1))
+    elif match2:
+        duration /= int(match2.group(1)) / 100
+    else:
+        return "请使用正确的倍率格式，如：0.5x、50%"
+    frames = split_gif(image)
+    return save_gif(frames, duration)
+
+
 def gif_split(img: BuildImage = Img(), arg=NoArg()):
     image = img.image
     if getattr(image, "is_animated", False):

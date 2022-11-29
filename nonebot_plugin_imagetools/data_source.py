@@ -18,6 +18,7 @@ commands = [
     Command(("纯色图",), color_image),
     Command(("gif倒放", "倒放"), gif_reverse),
     Command(("gif正放倒放", "正放倒放"), gif_obverse_reverse),
+    Command(("gif变速",), gif_change_fps),
     Command(("gif分解",), gif_split),
     Command(("四宫格",), four_grid),
     Command(("九宫格",), nine_grid),
