@@ -1,14 +1,16 @@
 import re
+import math
 from io import BytesIO
 from typing import List, Optional
-from PIL.Image import Image as IMG
 from PIL.ImageColor import colormap
 from PIL import Image, ImageFilter, ImageOps
 
+from nonebot_plugin_imageutils.types import ColorType
 from nonebot_plugin_imageutils import BuildImage, text2image
+from nonebot_plugin_imageutils.gradient import ColorStop, LinearGradient
 
 from .color_table import color_table
-from .depends import Arg, Img, NoArg
+from .depends import Arg, Args, Img, NoArg
 from .utils import save_gif, make_jpg_or_gif, Maker, get_avg_duration, split_gif
 
 colors = "|".join(colormap.keys())
@@ -133,7 +135,7 @@ def color_mask(img: BuildImage = Img(), arg: str = Arg()):
     elif arg in color_table:
         color = color_table[arg]
     else:
-        return "请使用正确的颜色格式，如：#66ccff、red、红色、102 204 255"
+        return "请使用正确的颜色格式，如：#66ccff、red、红色、102,204,255"
     return make_jpg_or_gif(img, lambda img: img.color_mask(color))
 
 
@@ -145,8 +147,54 @@ def color_image(arg: str = Arg()):
     elif arg in color_table:
         color = color_table[arg]
     else:
-        return "请使用正确的颜色格式，如：#66ccff、red、红色、102 204 255"
+        return "请使用正确的颜色格式，如：#66ccff、red、红色、102,204,255"
     return BuildImage.new("RGB", (500, 500), color).save_jpg()
+
+
+def gradient_image(args: List[str] = Args()):
+    if not args:
+        return
+    angle = 0
+    if args[0] in ["上下", "竖直"]:
+        angle = 90
+        args = args[1:]
+    elif args[0] in ["左右", "水平"]:
+        angle = 0
+        args = args[1:]
+    elif args[0].isdigit():
+        angle = int(args[0])
+        args = args[1:]
+    if not args:
+        return
+
+    colors: List[ColorType] = []
+    for arg in args:
+        if re.fullmatch(color_pattern_str, arg):
+            color = arg
+        elif match := re.fullmatch(color_pattern_num, arg):
+            color = tuple(map(int, match.groups()))
+        elif arg in color_table:
+            color = color_table[arg]
+        else:
+            return "请使用正确的颜色格式，如：#66ccff、red、红色、102,204,255"
+        colors.append(color)
+
+    img_w = 500
+    img_h = 500
+    angle *= math.pi / 180
+    if math.sqrt(img_w**2 + img_h**2) * math.cos(angle) <= img_w:
+        dy = img_h / 2
+        dx = dy / math.tan(angle)
+    else:
+        dx = img_w / 2
+        dy = dx * math.tan(angle)
+
+    gradient = LinearGradient(
+        (img_w / 2 - dx, img_h / 2 - dy, img_w / 2 + dx, img_h / 2 + dy),
+        [ColorStop(i / (len(colors) - 1), color) for i, color in enumerate(colors)],
+    )
+    img = gradient.create_image((img_w, img_h))
+    return BuildImage(img).save_jpg()
 
 
 def gif_reverse(img: BuildImage = Img(), arg=NoArg()):

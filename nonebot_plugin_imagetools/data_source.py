@@ -16,6 +16,7 @@ commands = [
     Command(("像素化",), pixelate),
     Command(("颜色滤镜",), color_mask),
     Command(("纯色图",), color_image),
+    Command(("渐变图",), gradient_image),
     Command(("gif倒放", "倒放"), gif_reverse),
     Command(("gif正放倒放", "正放倒放"), gif_obverse_reverse),
     Command(("gif变速",), gif_change_fps),
