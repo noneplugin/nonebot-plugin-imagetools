@@ -21,6 +21,7 @@ commands = [
     Command(("gif正放倒放", "正放倒放"), gif_obverse_reverse),
     Command(("gif变速",), gif_change_fps),
     Command(("gif分解",), gif_split),
+    Command(("gif合成",), gif_merge),
     Command(("四宫格",), four_grid),
     Command(("九宫格",), nine_grid),
     Command(("文字转图",), t2p),

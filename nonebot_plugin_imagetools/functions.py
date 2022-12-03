@@ -10,7 +10,7 @@ from nonebot_plugin_imageutils import BuildImage, text2image
 from nonebot_plugin_imageutils.gradient import ColorStop, LinearGradient
 
 from .color_table import color_table
-from .depends import Arg, Args, Img, NoArg
+from .depends import Arg, Args, Img, Imgs, NoArg
 from .utils import save_gif, make_jpg_or_gif, Maker, get_avg_duration, split_gif
 
 colors = "|".join(colormap.keys())
@@ -236,6 +236,25 @@ def gif_split(img: BuildImage = Img(), arg=NoArg()):
     if getattr(image, "is_animated", False):
         frames = split_gif(image)
         return [BuildImage(frame).save_png() for frame in frames]
+
+
+def gif_merge(imgs: List[BuildImage] = Imgs(), arg: str = Arg()):
+    if not arg:
+        duration = 100
+    elif arg.isdigit():
+        duration = int(arg)
+    else:
+        return
+
+    if not imgs:
+        return
+    if len(imgs) < 2:
+        return "gif合成至少需要2张图片"
+
+    max_w = max([img.width for img in imgs])
+    max_h = max([img.height for img in imgs])
+    frames = [img.resize_canvas((max_w, max_h)).image for img in imgs]
+    return save_gif(frames, duration / 1000)
 
 
 def four_grid(img: BuildImage = Img(), arg=NoArg()):

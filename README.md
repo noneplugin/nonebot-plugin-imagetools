@@ -70,7 +70,8 @@ pip install nonebot_plugin_imagetools
  - gif倒放/倒放
  - gif正放倒放/正放倒放
  - gif变速 + 倍率，如：`gif变速 0.5x`；`gif变速 50%`
- - gif分解
+ - gif分解 [+ 间隔时间] + 至少两张图片，间隔时间默认为`100`，单位为`ms`
+ - gif合成 
  - 四宫格
  - 九宫格
  - 文字转图 + 文字，支持少量BBcode
