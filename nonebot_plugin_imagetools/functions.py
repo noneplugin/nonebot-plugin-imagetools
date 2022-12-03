@@ -238,7 +238,7 @@ def gif_split(img: BuildImage = Img(), arg=NoArg()):
         return [BuildImage(frame).save_png() for frame in frames]
 
 
-def gif_merge(imgs: List[BuildImage] = Imgs(), arg: str = Arg()):
+def gif_join(imgs: List[BuildImage] = Imgs(), arg: str = Arg()):
     if not arg:
         duration = 100
     elif arg.isdigit():
@@ -291,6 +291,42 @@ def nine_grid(img: BuildImage = Img(), arg=NoArg()):
     for box in boxes:
         output.append(img.crop(box).save_png())
     return output
+
+
+def horizontal_join(imgs: List[BuildImage] = Imgs(), arg=NoArg()):
+    if not imgs:
+        return
+    if len(imgs) < 2:
+        return "图片拼接至少需要2张图片"
+
+    spacing = 10
+    img_h = min([img.height for img in imgs])
+    imgs = [img.resize((img.width * img_h // img.height, img_h)) for img in imgs]
+    img_w = sum([img.width for img in imgs]) + spacing * (len(imgs) - 1)
+    frame = BuildImage.new("RGB", (img_w, img_h), "white")
+    x = 0
+    for img in imgs:
+        frame.paste(img, (x, 0))
+        x += img.width + spacing
+    return frame.save_jpg()
+
+
+def vertical_join(imgs: List[BuildImage] = Imgs(), arg=NoArg()):
+    if not imgs:
+        return
+    if len(imgs) < 2:
+        return "图片拼接至少需要2张图片"
+
+    spacing = 10
+    img_w = min([img.width for img in imgs])
+    imgs = [img.resize((img_w, img.height * img_w // img.width)) for img in imgs]
+    img_h = sum([img.height for img in imgs]) + spacing * (len(imgs) - 1)
+    frame = BuildImage.new("RGB", (img_w, img_h), "white")
+    y = 0
+    for img in imgs:
+        frame.paste(img, (0, y))
+        y += img.height + spacing
+    return frame.save_jpg()
 
 
 def t2p(arg: str = Arg()):

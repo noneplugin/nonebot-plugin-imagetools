@@ -74,4 +74,6 @@ pip install nonebot_plugin_imagetools
  - gif合成 
  - 四宫格
  - 九宫格
+ - 横向拼接 + 至少两张图片
+ - 纵向拼接 + 至少两张图片
  - 文字转图 + 文字，支持少量BBcode
