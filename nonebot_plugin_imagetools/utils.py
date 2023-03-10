@@ -1,12 +1,12 @@
-import httpx
 import asyncio
-from io import BytesIO
 from dataclasses import dataclass
-from PIL.Image import Image as IMG
-from typing import Callable, List, Protocol, Tuple, Optional
+from io import BytesIO
+from typing import Callable, List, Optional, Protocol, Tuple
 
+import httpx
 from nonebot.log import logger
-from nonebot_plugin_imageutils import BuildImage
+from PIL.Image import Image as IMG
+from pil_utils import BuildImage
 
 
 @dataclass

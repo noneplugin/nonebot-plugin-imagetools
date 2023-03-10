@@ -1,5 +1,5 @@
-from .utils import Command
 from .functions import *
+from .utils import Command
 
 commands = [
     Command(("水平翻转", "左翻", "右翻"), flip_horizontal),

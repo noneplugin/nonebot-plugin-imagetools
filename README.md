@@ -17,7 +17,7 @@ nb plugin install nonebot_plugin_imagetools
 pip install nonebot_plugin_imagetools
 ```
 
-本插件使用了 [go-cqhttp](https://github.com/Mrs4s/go-cqhttp) 的 `send_group_forward_msg` 和 `send_private_forward_msg` 接口 来发送合并转发消息，使用了 `upload_group_file` 和 `upload_private_file` 接口 来上传文件
+对于 OneBot V11 适配器，本插件使用了 [go-cqhttp](https://github.com/Mrs4s/go-cqhttp) 的 `send_group_forward_msg` 和 `send_private_forward_msg` 接口 来发送合并转发消息，使用了 `upload_group_file` 和 `upload_private_file` 接口 来上传文件
 
 发送私聊合并转发消息需要使用 `v1.0.0-rc2` 版本以上的 go-cqhttp
 
@@ -26,8 +26,9 @@ pip install nonebot_plugin_imagetools
 
 ### 配置项
 
-<details>
-<summary>展开/收起</summary>
+> 以下配置仅适用于 OneBot V11 适配器
+>
+> 对于 OneBot V12 适配器，当输出图片数量大于 1 时，都打包为zip以文件形式发送
 
 #### `imagetools_zip_threshold`
  - 类型：`int`
@@ -38,8 +39,6 @@ pip install nonebot_plugin_imagetools
  - 类型：`int`
  - 默认：`99`
  - 说明：合并转发消息条数上限
-
-</details>
 
 
 ### 使用
@@ -71,7 +70,7 @@ pip install nonebot_plugin_imagetools
  - gif正放倒放/正放倒放
  - gif变速 + 倍率，如：`gif变速 0.5x`；`gif变速 50%`
  - gif分解 [+ 间隔时间] + 至少两张图片，间隔时间默认为`100`，单位为`ms`
- - gif合成 
+ - gif合成 + 至少两张图片
  - 四宫格
  - 九宫格
  - 横向拼接 + 至少两张图片

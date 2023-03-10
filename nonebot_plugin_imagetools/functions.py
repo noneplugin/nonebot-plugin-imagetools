@@ -1,17 +1,17 @@
-import re
 import math
+import re
 from io import BytesIO
 from typing import List, Optional
-from PIL.ImageColor import colormap
-from PIL import Image, ImageFilter, ImageOps
 
-from nonebot_plugin_imageutils.types import ColorType
-from nonebot_plugin_imageutils import BuildImage, text2image
-from nonebot_plugin_imageutils.gradient import ColorStop, LinearGradient
+from PIL import Image, ImageFilter, ImageOps
+from PIL.ImageColor import colormap
+from pil_utils import BuildImage, text2image
+from pil_utils.gradient import ColorStop, LinearGradient
+from pil_utils.types import ColorType
 
 from .color_table import color_table
 from .depends import Arg, Args, Img, Imgs, NoArg
-from .utils import save_gif, make_jpg_or_gif, Maker, get_avg_duration, split_gif
+from .utils import Maker, get_avg_duration, make_jpg_or_gif, save_gif, split_gif
 
 colors = "|".join(colormap.keys())
 color_pattern_str = rf"#[a-fA-F0-9]{{6}}|{colors}"

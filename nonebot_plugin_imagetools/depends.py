@@ -1,24 +1,45 @@
 import shlex
 from io import BytesIO
-from typing import List
-from typing_extensions import Literal
-from nonebot.params import CommandArg, Depends
-from nonebot.adapters.onebot.v11 import Message, MessageEvent, unescape
+from typing import List, Union
 
-from nonebot_plugin_imageutils import BuildImage
+from nonebot.adapters.onebot.v11 import Bot as V11Bot
+from nonebot.adapters.onebot.v11 import Message as V11Msg
+from nonebot.adapters.onebot.v11 import MessageEvent as V11MEvent
+from nonebot.adapters.onebot.v11.utils import unescape
+from nonebot.adapters.onebot.v12 import Bot as V12Bot
+from nonebot.adapters.onebot.v12 import Message as V12Msg
+from nonebot.adapters.onebot.v12 import MessageEvent as V12MEvent
+from nonebot.params import CommandArg, Depends
+from pil_utils import BuildImage
+from typing_extensions import Literal
 
 from .utils import download_url
 
 
 def Imgs():
-    async def dependency(event: MessageEvent, msg: Message = CommandArg()):
-        img_segs = msg["image"]
-        if event.reply:
-            img_segs = event.reply.message["image"].extend(img_segs)
-        return [
-            BuildImage.open(BytesIO(await download_url(msg_seg.data["url"])))
-            for msg_seg in img_segs
-        ]
+    async def dependency(
+        bot: Union[V11Bot, V12Bot],
+        event: Union[V11MEvent, V12MEvent],
+        msg: Union[V11Msg, V12Msg] = CommandArg(),
+    ):
+        urls: List[str] = []
+        if isinstance(bot, V11Bot):
+            assert isinstance(event, V11MEvent)
+            assert isinstance(msg, V11Msg)
+            img_segs = msg["image"]
+            if event.reply:
+                img_segs = event.reply.message["image"].extend(img_segs)
+            urls = [seg.data["url"] for seg in img_segs]
+        else:
+            assert isinstance(event, V12MEvent)
+            assert isinstance(msg, V12Msg)
+            img_segs = msg["image"]
+            for seg in img_segs:
+                file_id = seg.data["file_id"]
+                data = await bot.get_file(type="url", file_id=file_id)
+                urls.append(data["url"])
+
+        return [BuildImage.open(BytesIO(await download_url(url))) for url in urls]
 
     return Depends(dependency)
 
@@ -32,8 +53,11 @@ def Img():
 
 
 def Arg():
-    async def dependency(msg: Message = CommandArg()):
-        return unescape(msg.extract_plain_text().strip())
+    async def dependency(msg: Union[V11Msg, V12Msg] = CommandArg()):
+        if isinstance(msg, V11Msg):
+            return unescape(msg.extract_plain_text().strip())
+        else:
+            return msg.extract_plain_text().strip()
 
     return Depends(dependency)
 
