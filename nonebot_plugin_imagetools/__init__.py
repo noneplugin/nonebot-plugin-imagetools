@@ -4,6 +4,7 @@ import tempfile
 from datetime import datetime
 from io import BytesIO
 from itertools import chain
+from pathlib import Path
 from typing import List, Union
 from zipfile import ZIP_BZIP2, ZipFile
 
@@ -36,7 +37,7 @@ __plugin_meta__ = PluginMetadata(
         "unique_name": "imagetools",
         "example": "旋转 [图片]",
         "author": "meetwq <meetwq@gmail.com>",
-        "version": "0.2.0",
+        "version": "0.2.1",
     },
 )
 
@@ -196,8 +197,9 @@ async def upload_file(
     file: BytesIO,
     filename: str,
 ):
-    with tempfile.NamedTemporaryFile("wb+") as f:
-        f.write(file.getbuffer())
+    with tempfile.TemporaryDirectory() as temp_dir:
+        with open(Path(temp_dir) / filename, "wb") as f:
+            f.write(file.getbuffer())
         if isinstance(event, V11GMEvent):
             await bot.call_api(
                 "upload_group_file", group_id=event.group_id, file=f.name, name=filename

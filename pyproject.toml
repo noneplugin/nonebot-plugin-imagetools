@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_imagetools"
-version = "0.2.0"
+version = "0.2.1"
 description = "Nonebot2 简单图片操作插件"
 authors = ["meetwq <meetwq@gmail.com>"]
 license = "MIT"
