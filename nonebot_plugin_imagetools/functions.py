@@ -36,7 +36,7 @@ def rotate(img: BuildImage = Img(), arg: str = Arg()):
     angle = None
     if not arg:
         angle = 90
-    elif arg.isdigit():
+    elif arg.isdigit() or (arg.startswith("-") and arg[1:].isdigit()):
         angle = int(arg)
     if not angle:
         return
