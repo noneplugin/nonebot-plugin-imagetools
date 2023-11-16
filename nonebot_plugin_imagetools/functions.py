@@ -223,9 +223,9 @@ def gif_change_fps(img: BuildImage = Img(), arg: str = Arg()):
         duration /= float(match.group(1))
     elif match := re.fullmatch(r"(\d{1,3})%", arg):
         duration /= int(match.group(1)) / 100
-    elif match := re.fullmatch(r"(\d+)fps", arg, re.I):
-        duration = 1 / int(match.group(1))
-    elif match := re.fullmatch(r"(\d+\.\d+)(m?)s", arg, re.I):
+    elif match := re.fullmatch(r"(\d+(\.\d+)?)fps", arg, re.I):
+        duration = 1 / float(match.group(1))
+    elif match := re.fullmatch(r"(\d+(\.\d+)?)(m?)s", arg, re.I):
         duration = (
             float(match.group(1)) / 1000 if match.group(2) else float(match.group(1))
         )
