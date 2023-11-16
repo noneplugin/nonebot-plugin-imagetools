@@ -218,15 +218,25 @@ def gif_change_fps(img: BuildImage = Img(), arg: str = Arg()):
     image = img.image
     if not getattr(image, "is_animated", False):
         return
-    match1 = re.fullmatch(r"([\d\.]{1,4})(?:x|X|倍速?)", arg)
-    match2 = re.fullmatch(r"(\d{1,3})%", arg)
     duration = get_avg_duration(image) / 1000
-    if match1:
-        duration /= float(match1.group(1))
-    elif match2:
-        duration /= int(match2.group(1)) / 100
+    if match := re.fullmatch(r"([\d\.]{1,4})(?:x|X|倍速?)", arg):
+        duration /= float(match.group(1))
+    elif match := re.fullmatch(r"(\d{1,3})%", arg):
+        duration /= int(match.group(1)) / 100
+    elif match := re.fullmatch(r"(\d+(\.\d+)?)fps", arg, re.I):
+        duration = 1 / float(match.group(1))
+    elif match := re.fullmatch(r"(\d+(\.\d+)?)(m?)s", arg, re.I):
+        duration = (
+            float(match.group(1)) / 1000 if match.group(2) else float(match.group(1))
+        )
     else:
-        return "请使用正确的倍率格式，如：0.5x、50%"
+        return "请使用正确的倍率格式，如：0.5x、50%、20FPS、0.05s"
+    if duration < 0.02:
+        return (
+            f"帧间隔必须 大于 0.02 s（小于等于 50 FPS），\n"
+            f"超过该限制可能会导致 GIF 显示速度不正常。\n"
+            f"当前帧间隔为 {duration:.3f} s ({1 / duration:.1f} FPS)"
+        )
     frames = split_gif(image)
     return save_gif(frames, duration)
 

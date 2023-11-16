@@ -105,8 +105,8 @@ def handler_v11(command: Command) -> T_Handler:
                 filename = f"{command.keywords[0]}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.zip"
                 try:
                     await upload_file(bot, event, zip_file, filename)
-                except:
-                    logger.warning("上传文件失败")
+                except Exception as e:
+                    logger.warning(f"上传文件失败：{e.__class__.__name__}: {e}")
 
             msgs: List[V11Msg] = [V11Msg(V11MsgSeg.image(msg)) for msg in res]
             max_forward_msg_num = imagetools_config.max_forward_msg_num
