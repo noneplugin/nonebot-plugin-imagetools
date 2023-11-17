@@ -7,7 +7,7 @@ class Config(BaseModel, extra=Extra.ignore):
     """
     输出图片数量大于该数目时，打包为zip以文件形式发送
     """
-    max_forward_msg_num: int = 99
+    imagetools_max_forward_msg_num: int = 99
     """
     合并转发消息条数上限
     """

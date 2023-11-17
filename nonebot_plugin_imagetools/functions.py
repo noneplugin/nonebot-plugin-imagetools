@@ -3,7 +3,8 @@ import re
 from io import BytesIO
 from typing import List, Optional
 
-from PIL import Image, ImageFilter, ImageOps
+from PIL import ImageFilter, ImageOps
+from PIL.Image import Transpose
 from PIL.ImageColor import colormap
 from pil_utils import BuildImage, text2image
 from pil_utils.gradient import ColorStop, LinearGradient
@@ -21,11 +22,11 @@ color_pattern_num = rf"(?:rgb)?\(?\s*{num_256}[\s,]+{num_256}[\s,]+{num_256}\s*\
 
 
 def flip_horizontal(img: BuildImage = Img(), arg=NoArg()):
-    return make_jpg_or_gif(img, lambda img: img.transpose(Image.FLIP_LEFT_RIGHT))
+    return make_jpg_or_gif(img, lambda img: img.transpose(Transpose.FLIP_LEFT_RIGHT))
 
 
 def flip_vertical(img: BuildImage = Img(), arg=NoArg()):
-    return make_jpg_or_gif(img, lambda img: img.transpose(Image.FLIP_TOP_BOTTOM))
+    return make_jpg_or_gif(img, lambda img: img.transpose(Transpose.FLIP_TOP_BOTTOM))
 
 
 def grey(img: BuildImage = Img(), arg=NoArg()):
@@ -132,6 +133,7 @@ def color_mask(img: BuildImage = Img(), arg: str = Arg()):
         color = arg
     elif match := re.fullmatch(color_pattern_num, arg):
         color = tuple(map(int, match.groups()))
+        assert len(color) == 3
     elif arg in color_table:
         color = color_table[arg]
     else:
@@ -144,6 +146,7 @@ def color_image(arg: str = Arg()):
         color = arg
     elif match := re.fullmatch(color_pattern_num, arg):
         color = tuple(map(int, match.groups()))
+        assert len(color) == 3
     elif arg in color_table:
         color = color_table[arg]
     else:
@@ -173,6 +176,7 @@ def gradient_image(args: List[str] = Args()):
             color = arg
         elif match := re.fullmatch(color_pattern_num, arg):
             color = tuple(map(int, match.groups()))
+            assert len(color) == 3
         elif arg in color_table:
             color = color_table[arg]
         else:

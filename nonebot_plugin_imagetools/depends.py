@@ -1,45 +1,44 @@
 import shlex
+import traceback
 from io import BytesIO
-from typing import List, Union
+from typing import List
 
-from nonebot.adapters.onebot.v11 import Bot as V11Bot
-from nonebot.adapters.onebot.v11 import Message as V11Msg
-from nonebot.adapters.onebot.v11 import MessageEvent as V11MEvent
-from nonebot.adapters.onebot.v11.utils import unescape
-from nonebot.adapters.onebot.v12 import Bot as V12Bot
-from nonebot.adapters.onebot.v12 import Message as V12Msg
-from nonebot.adapters.onebot.v12 import MessageEvent as V12MEvent
+from nonebot.adapters import Bot, Event, Message
+from nonebot.log import logger
 from nonebot.params import CommandArg, Depends
+from nonebot.typing import T_State
+from nonebot_plugin_alconna import Image, Reply, UniMessage, image_fetch
 from pil_utils import BuildImage
 from typing_extensions import Literal
-
-from .utils import download_url
 
 
 def Imgs():
     async def dependency(
-        bot: Union[V11Bot, V12Bot],
-        event: Union[V11MEvent, V12MEvent],
-        msg: Union[V11Msg, V12Msg] = CommandArg(),
+        bot: Bot, event: Event, state: T_State, arg: Message = CommandArg()
     ):
-        urls: List[str] = []
-        if isinstance(bot, V11Bot):
-            assert isinstance(event, V11MEvent)
-            assert isinstance(msg, V11Msg)
-            img_segs = msg["image"]
-            if event.reply:
-                img_segs = event.reply.message["image"].extend(img_segs)
-            urls = [seg.data["url"] for seg in img_segs]
-        else:
-            assert isinstance(event, V12MEvent)
-            assert isinstance(msg, V12Msg)
-            img_segs = msg["image"]
-            for seg in img_segs:
-                file_id = seg.data["file_id"]
-                data = await bot.get_file(type="url", file_id=file_id)
-                urls.append(data["url"])
+        imgs: List[bytes] = []
 
-        return [BuildImage.open(BytesIO(await download_url(url))) for url in urls]
+        msg = await UniMessage.generate(message=arg, event=event, bot=bot)
+        msg_with_reply = UniMessage()
+        for seg in msg:
+            if isinstance(seg, Reply):
+                if isinstance(seg.msg, Message):
+                    msg_with_reply.extend(seg.msg)
+            else:
+                msg_with_reply.append(seg)
+
+        for seg in msg_with_reply:
+            if isinstance(seg, Image):
+                try:
+                    result = await image_fetch(
+                        bot=bot, event=event, state=state, img=seg
+                    )
+                    if isinstance(result, bytes):
+                        imgs.append(result)
+                except:
+                    logger.warning(f"Fail to fetch image: {traceback.format_exc()}")
+
+        return [BuildImage.open(BytesIO(img)) for img in imgs]
 
     return Depends(dependency)
 
@@ -53,11 +52,8 @@ def Img():
 
 
 def Arg():
-    async def dependency(msg: Union[V11Msg, V12Msg] = CommandArg()):
-        if isinstance(msg, V11Msg):
-            return unescape(msg.extract_plain_text().strip())
-        else:
-            return msg.extract_plain_text().strip()
+    async def dependency(arg: Message = CommandArg()):
+        return arg.extract_plain_text().strip()
 
     return Depends(dependency)
 
