@@ -17,28 +17,25 @@ nb plugin install nonebot_plugin_imagetools
 pip install nonebot_plugin_imagetools
 ```
 
-对于 OneBot V11 适配器，本插件使用了 [go-cqhttp](https://github.com/Mrs4s/go-cqhttp) 的 `send_group_forward_msg` 和 `send_private_forward_msg` 接口 来发送合并转发消息，使用了 `upload_group_file` 和 `upload_private_file` 接口 来上传文件
-
-发送私聊合并转发消息需要使用 `v1.0.0-rc2` 版本以上的 go-cqhttp
-
-上传私聊文件需要使用 `v1.0.0-rc3` 版本以上的 go-cqhttp
-
 
 ### 配置项
-
-> 以下配置仅适用于 OneBot V11 适配器
->
-> 对于 OneBot V12 适配器，当输出图片数量大于 1 时，都打包为zip以文件形式发送
 
 #### `imagetools_zip_threshold`
  - 类型：`int`
  - 默认：`20`
- - 说明：输出图片数量大于该数目时，打包为zip以文件形式发送
+ - 说明：输出图片数量大于该数目时，打包为zip文件并上传
 
-#### `max_forward_msg_num`
+#### `imagetools_max_forward_msg_num`
  - 类型：`int`
  - 默认：`99`
- - 说明：合并转发消息条数上限
+ - 说明：输出图片数量小于该数目时，发送合并转发消息
+
+
+> [!NOTE]
+>
+> 本插件使用 [nonebot-plugin-saa](https://github.com/felinae98/nonebot-plugin-send-anything-anywhere) 插件来发送图片和合并转发消息，具体支持的平台和行为请参考该插件的文档
+>
+> 本插件使用 [nonebot-plugin-alconna](https://github.com/nonebot/plugin-alconna) 插件来发送文件，具体支持的平台和行为请参考该插件的文档
 
 
 ### 使用
