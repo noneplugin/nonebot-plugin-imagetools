@@ -7,27 +7,28 @@ from nonebot.adapters import Bot, Event, Message
 from nonebot.log import logger
 from nonebot.params import CommandArg, Depends
 from nonebot.typing import T_State
-from nonebot_plugin_alconna import Image, Reply, UniMessage, image_fetch
+from nonebot_plugin_alconna import Image, UniMessage, image_fetch
+from nonebot_plugin_alconna.uniseg.segment import reply_handle
 from pil_utils import BuildImage
 from typing_extensions import Literal
 
 
 def Imgs():
     async def dependency(
-        bot: Bot, event: Event, state: T_State, arg: Message = CommandArg()
+        bot: Bot, event: Event, state: T_State, msg: Message = CommandArg()
     ):
         imgs: List[bytes] = []
 
-        msg = await UniMessage.generate(message=arg, event=event, bot=bot)
-        msg_with_reply = UniMessage()
-        for seg in msg:
-            if isinstance(seg, Reply):
-                if isinstance(seg.msg, Message):
-                    msg_with_reply.extend(seg.msg)
-            else:
-                msg_with_reply.append(seg)
+        uni_msg = UniMessage()
+        if msg:
+            uni_msg = await UniMessage.generate(message=msg)
+        uni_msg_with_reply = UniMessage()
+        if reply := await reply_handle(event, bot):
+            if isinstance(reply.msg, Message) and reply.msg:
+                uni_msg_with_reply = await UniMessage.generate(message=reply.msg)
+        uni_msg_with_reply.extend(uni_msg)
 
-        for seg in msg_with_reply:
+        for seg in uni_msg_with_reply:
             if isinstance(seg, Image):
                 try:
                     result = await image_fetch(
