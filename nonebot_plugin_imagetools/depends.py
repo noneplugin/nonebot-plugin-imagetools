@@ -36,7 +36,7 @@ def Imgs():
                     )
                     if isinstance(result, bytes):
                         imgs.append(result)
-                except:
+                except Exception:
                     logger.warning(f"Fail to fetch image: {traceback.format_exc()}")
 
         return [BuildImage.open(BytesIO(img)) for img in imgs]
@@ -63,7 +63,7 @@ def Args():
     async def dependency(arg: str = Arg()):
         try:
             args = shlex.split(arg)
-        except:
+        except Exception:
             args = arg.split()
         args = [a for a in args if a]
         return args

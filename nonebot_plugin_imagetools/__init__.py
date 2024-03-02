@@ -1,14 +1,11 @@
 import imghdr
 import math
-import traceback
 from datetime import datetime
 from io import BytesIO
 from typing import List, Union
 from zipfile import ZIP_BZIP2, ZipFile
 
 from nonebot import on_command, require
-from nonebot.adapters import Bot, Event
-from nonebot.log import logger
 from nonebot.matcher import Matcher
 from nonebot.params import Depends
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
@@ -17,11 +14,9 @@ from nonebot.utils import run_sync
 from PIL.Image import Image as IMG
 from pil_utils import BuildImage, Text2Image
 
-require("nonebot_plugin_saa")
 require("nonebot_plugin_alconna")
 
-from nonebot_plugin_alconna import File, UniMessage
-from nonebot_plugin_saa import AggregatedMessageFactory, Image, MessageFactory
+from nonebot_plugin_alconna import Image, UniMessage
 
 from .config import Config, imagetools_config
 from .data_source import commands
@@ -34,14 +29,9 @@ __plugin_meta__ = PluginMetadata(
     type="application",
     homepage="https://github.com/noneplugin/nonebot-plugin-imagetools",
     config=Config,
-    supported_adapters=inherit_supported_adapters(
-        "nonebot_plugin_saa", "nonebot_plugin_alconna"
-    ),
+    supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna"),
     extra={
-        "unique_name": "imagetools",
         "example": "旋转 [图片]",
-        "author": "meetwq <meetwq@gmail.com>",
-        "version": "0.3.0",
     },
 )
 
@@ -67,8 +57,8 @@ def help_image() -> BytesIO:
     for idx in range(0, len(commands), num_per_col):
         text = cmd_text(commands[idx : idx + num_per_col], start=idx + 1)
         imgs.append(Text2Image.from_text(text, 30).to_image(padding=(20, 10)))
-    w = max(sum((img.width for img in imgs)), head.width)
-    h = head.height + max((img.height for img in imgs))
+    w = max(sum(img.width for img in imgs), head.width)
+    h = head.height + max(img.height for img in imgs)
     frame = BuildImage.new("RGBA", (w, h), "white")
     frame.paste(head, alpha=True)
     current_w = 0
@@ -81,39 +71,28 @@ def help_image() -> BytesIO:
 @help_cmd.handle()
 async def _():
     img = await help_image()
-    await MessageFactory([Image(img)]).send()
+    await UniMessage.image(raw=img).send()
 
 
 def handler(command: Command) -> T_Handler:
     async def handle(
-        bot: Bot,
-        event: Event,
         matcher: Matcher,
         res: Union[str, BytesIO, List[BytesIO]] = Depends(command.func),
     ):
         if isinstance(res, str):
             await matcher.finish(res)
         elif isinstance(res, BytesIO):
-            await MessageFactory([Image(res)]).send()
+            await UniMessage.image(raw=res).send()
         else:
             if len(res) > imagetools_config.imagetools_zip_threshold:
                 zip_file = zip_images(res)
-                filename = f"{command.keywords[0]}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.zip"
-                try:
-                    file = File(
-                        raw=zip_file.getvalue(),
-                        name=filename,
-                        mimetype="application/zip",
-                    )
-                    await UniMessage([file]).send(event, bot)
-                except:
-                    logger.warning(f"上传文件失败：{traceback.format_exc()}")
-
-            if len(res) <= imagetools_config.imagetools_max_forward_msg_num:
-                try:
-                    await AggregatedMessageFactory([Image(img) for img in res]).send()
-                except:
-                    logger.warning(f"合并消息发送失败: {traceback.format_exc()}")
+                time_str = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+                filename = f"{command.keywords[0]}_{time_str}.zip"
+                await UniMessage.file(
+                    raw=zip_file.getvalue(), name=filename, mimetype="application/zip"
+                ).send()
+            else:
+                await UniMessage(Image(raw=img) for img in res).send()
 
     return handle
 

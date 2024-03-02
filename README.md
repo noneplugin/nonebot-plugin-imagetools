@@ -25,17 +25,10 @@ pip install nonebot_plugin_imagetools
  - 默认：`20`
  - 说明：输出图片数量大于该数目时，打包为zip文件并上传
 
-#### `imagetools_max_forward_msg_num`
- - 类型：`int`
- - 默认：`99`
- - 说明：输出图片数量小于该数目时，发送合并转发消息
-
 
 > [!NOTE]
 >
-> 本插件使用 [nonebot-plugin-saa](https://github.com/felinae98/nonebot-plugin-send-anything-anywhere) 插件来发送图片和合并转发消息，具体支持的平台和行为请参考该插件的文档
->
-> 本插件使用 [nonebot-plugin-alconna](https://github.com/nonebot/plugin-alconna) 插件来发送文件，具体支持的平台和行为请参考该插件的文档
+> 本插件使用 [nonebot-plugin-alconna](https://github.com/nonebot/plugin-alconna) 插件来发送图片和文件，具体支持的平台和行为请参考该插件的文档
 
 
 ### 使用

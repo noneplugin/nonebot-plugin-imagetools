@@ -1,16 +1,12 @@
-from nonebot import get_driver
-from pydantic import BaseModel, Extra
+from nonebot import get_plugin_config
+from pydantic import BaseModel
 
 
-class Config(BaseModel, extra=Extra.ignore):
-    imagetools_zip_threshold: int = 20
+class Config(BaseModel):
+    imagetools_zip_threshold: int = 10
     """
     输出图片数量大于该数目时，打包为zip以文件形式发送
     """
-    imagetools_max_forward_msg_num: int = 99
-    """
-    合并转发消息条数上限
-    """
 
 
-imagetools_config = Config.parse_obj(get_driver().config.dict())
+imagetools_config = get_plugin_config(Config)

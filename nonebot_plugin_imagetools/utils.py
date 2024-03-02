@@ -44,8 +44,7 @@ async def download_url(url: str) -> bytes:
 
 
 class Maker(Protocol):
-    def __call__(self, img: BuildImage) -> BuildImage:
-        ...
+    def __call__(self, img: BuildImage) -> BuildImage: ...
 
 
 def get_avg_duration(image: IMG) -> float:

@@ -273,12 +273,12 @@ def gif_join(imgs: List[BuildImage] = Imgs(), arg: str = Arg()):
 
 def four_grid(img: BuildImage = Img(), arg=NoArg()):
     img = img.square()
-    l = img.width // 2
+    a = img.width // 2
     boxes = [
-        (0, 0, l, l),
-        (l, 0, l * 2, l),
-        (0, l, l, l * 2),
-        (l, l, l * 2, l * 2),
+        (0, 0, a, a),
+        (a, 0, a * 2, a),
+        (0, a, a, a * 2),
+        (a, a, a * 2, a * 2),
     ]
     output: List[BytesIO] = []
     for box in boxes:
@@ -289,17 +289,17 @@ def four_grid(img: BuildImage = Img(), arg=NoArg()):
 def nine_grid(img: BuildImage = Img(), arg=NoArg()):
     img = img.square()
     w = img.width
-    l = img.width // 3
+    a = img.width // 3
     boxes = [
-        (0, 0, l, l),
-        (l, 0, l * 2, l),
-        (l * 2, 0, w, l),
-        (0, l, l, l * 2),
-        (l, l, l * 2, l * 2),
-        (l * 2, l, w, l * 2),
-        (0, l * 2, l, w),
-        (l, l * 2, l * 2, w),
-        (l * 2, l * 2, w, w),
+        (0, 0, a, a),
+        (a, 0, a * 2, a),
+        (a * 2, 0, w, a),
+        (0, a, a, a * 2),
+        (a, a, a * 2, a * 2),
+        (a * 2, a, w, a * 2),
+        (0, a * 2, a, w),
+        (a, a * 2, a * 2, w),
+        (a * 2, a * 2, w, w),
     ]
     output: List[BytesIO] = []
     for box in boxes:
