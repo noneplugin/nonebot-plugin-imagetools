@@ -17,6 +17,16 @@ nb plugin install nonebot_plugin_imagetools
 pip install nonebot_plugin_imagetools
 ```
 
+#### 配置驱动器​
+
+插件需要“客户端型驱动器”（如 httpx）来下载图片等，驱动器安装和配置参考 [NoneBot 选择驱动器](https://nonebot.dev/docs/advanced/driver)
+
+同时需要在 `.env.*` 配置文件中启用对应的驱动器，例如：
+
+```
+DRIVER=~fastapi+~httpx+~websockets
+```
+
 
 ### 配置项
 

@@ -38,13 +38,13 @@ trio = ["trio (>=0.23)"]
 
 [[package]]
 name = "arclet-alconna"
-version = "1.8.3"
+version = "1.8.5"
 description = "A High-performance, Generality, Humane Command Line Arguments Parser Library."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "arclet_alconna-1.8.3-py3-none-any.whl", hash = "sha256:a9e3ee69ae06b2ac20bb6571cfb2560f8d72c4103a1a866a464101b78fe3d578"},
-    {file = "arclet_alconna-1.8.3.tar.gz", hash = "sha256:5f698062206c7ff4e6c906f02017eacd07de8c03ad155b8ccbb1c37c1b638673"},
+    {file = "arclet_alconna-1.8.5-py3-none-any.whl", hash = "sha256:b9f0309df53f957a16316155a3e61d1c3ffa33c2eb641b928ad27aa3effd9b2c"},
+    {file = "arclet_alconna-1.8.5.tar.gz", hash = "sha256:d8afc384b4481d6156302bd3e5b89bc511c66357ff49775d3f6d5b74cf6886c0"},
 ]
 
 [package.dependencies]
@@ -399,13 +399,13 @@ files = [
 
 [[package]]
 name = "importlib-resources"
-version = "6.1.2"
+version = "6.1.3"
 description = "Read resources from Python packages"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "importlib_resources-6.1.2-py3-none-any.whl", hash = "sha256:9a0a862501dc38b68adebc82970140c9e4209fc99601782925178f8386339938"},
-    {file = "importlib_resources-6.1.2.tar.gz", hash = "sha256:308abf8474e2dba5f867d279237cd4076482c3de7104a40b41426370e891549b"},
+    {file = "importlib_resources-6.1.3-py3-none-any.whl", hash = "sha256:4c0269e3580fe2634d364b39b38b961540a7738c02cb984e98add8b4221d793d"},
+    {file = "importlib_resources-6.1.3.tar.gz", hash = "sha256:56fb4525197b78544a3354ea27793952ab93f935bb4bf746b846bb1015020f2b"},
 ]
 
 [package.dependencies]
@@ -413,7 +413,7 @@ zipp = {version = ">=3.1.0", markers = "python_version < \"3.10\""}
 
 [package.extras]
 docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (<7.2.5)", "sphinx (>=3.5)", "sphinx-lint"]
-testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy", "pytest-ruff (>=0.2.1)", "zipp (>=3.17)"]
+testing = ["jaraco.collections", "pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy", "pytest-ruff (>=0.2.1)", "zipp (>=3.17)"]
 
 [[package]]
 name = "kiwisolver"
@@ -730,20 +730,20 @@ typing-extensions = ">=4.5.0"
 
 [[package]]
 name = "nonebot-plugin-alconna"
-version = "0.38.2"
+version = "0.40.1"
 description = "Alconna Adapter for Nonebot"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "nonebot_plugin_alconna-0.38.2-py3-none-any.whl", hash = "sha256:c1220bf69ce2c785f18bd5040450a53da88e5dbff9ef01ec0616a82233cabc36"},
-    {file = "nonebot_plugin_alconna-0.38.2.tar.gz", hash = "sha256:df45cdec0c7446ecc97aa7721c05241278d14fd7460cfe3a48249cf1d58a779f"},
+    {file = "nonebot_plugin_alconna-0.40.1-py3-none-any.whl", hash = "sha256:6f4bd7576e6df65710a7f920c93cb5400a8eef66abaff06189b532930b376330"},
+    {file = "nonebot_plugin_alconna-0.40.1.tar.gz", hash = "sha256:10b52ee800dd10ffa033208d2dbac6d459b3573dbfeaf53efadc50f62c1213f2"},
 ]
 
 [package.dependencies]
-arclet-alconna = ">=1.8.3"
+arclet-alconna = ">=1.8.5"
 arclet-alconna-tools = ">=0.7.0"
-nepattern = ">=0.6.0"
-nonebot2 = ">=2.2.0"
+nepattern = ">=0.6.5"
+nonebot2 = ">=2.2.1"
 
 [[package]]
 name = "nonebot2"
@@ -857,24 +857,24 @@ numpy = [
 
 [[package]]
 name = "packaging"
-version = "23.2"
+version = "24.0"
 description = "Core utilities for Python packages"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "packaging-23.2-py3-none-any.whl", hash = "sha256:8c491190033a9af7e1d931d0b5dacc2ef47509b34dd0de67ed209b5203fc88c7"},
-    {file = "packaging-23.2.tar.gz", hash = "sha256:048fb0e9405036518eaaf48a55953c750c11e1a1b68e0dd1a9d62ed0c092cfc5"},
+    {file = "packaging-24.0-py3-none-any.whl", hash = "sha256:2ddfb553fdf02fb784c234c7ba6ccc288296ceabec964ad2eae3777778130bc5"},
+    {file = "packaging-24.0.tar.gz", hash = "sha256:eb82c5e3e56209074766e6885bb04b8c38a0c015d0a30036ebe7ece34c9989e9"},
 ]
 
 [[package]]
 name = "pil-utils"
-version = "0.1.8"
+version = "0.1.10"
 description = "A simple PIL wrapper and text-to-image tool"
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "pil_utils-0.1.8-py3-none-any.whl", hash = "sha256:22b0ed4eeb532386fb61658795c88c77919440f6169ccea76428c83bb0257f72"},
-    {file = "pil_utils-0.1.8.tar.gz", hash = "sha256:6223cb1451449a4c9ebc48d6a9e3705711ecf7c120db97d9cd4ca2bc9e0f0618"},
+    {file = "pil_utils-0.1.10-py3-none-any.whl", hash = "sha256:ff9459d7b4336e9b07a5e11e06b12a6e477ae68eae0124ac5710b28ae5d4d6d8"},
+    {file = "pil_utils-0.1.10.tar.gz", hash = "sha256:4e6d08cc39cba3f65eb17847662d2c1e68e2ac12503e4a73e57d980b2dc77cda"},
 ]
 
 [package.dependencies]
@@ -883,7 +883,7 @@ fonttools = ">=4.0.0,<5.0.0"
 matplotlib = ">=3.0.0,<4.0.0"
 numpy = ">=1.20.0,<2.0.0"
 opencv-python-headless = ">=4.0.0,<5.0.0"
-Pillow = ">=9.2.0,<11.0.0"
+Pillow = ">=10.0.0,<11.0.0"
 
 [[package]]
 name = "pillow"
@@ -1093,13 +1093,13 @@ files = [
 
 [[package]]
 name = "pyparsing"
-version = "3.1.1"
+version = "3.1.2"
 description = "pyparsing module - Classes and methods to define and execute parsing grammars"
 optional = false
 python-versions = ">=3.6.8"
 files = [
-    {file = "pyparsing-3.1.1-py3-none-any.whl", hash = "sha256:32c7c0b711493c72ff18a981d24f28aaf9c1fb7ed5e9667c9e84e3db623bdbfb"},
-    {file = "pyparsing-3.1.1.tar.gz", hash = "sha256:ede28a1a32462f5a9705e07aea48001a08f7cf81a021585011deba701581a0db"},
+    {file = "pyparsing-3.1.2-py3-none-any.whl", hash = "sha256:f9db75911801ed778fe61bb643079ff86601aca99fcae6345aa67292038fb742"},
+    {file = "pyparsing-3.1.2.tar.gz", hash = "sha256:a1bac0ce561155ecc3ed78ca94d3c9378656ad4c94c1270de543f621420f94ad"},
 ]
 
 [package.extras]
@@ -1371,4 +1371,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "a863cb3878553dae0da45a84587b8f02f7a5a5fa3dcffd62a9f7667c57036199"
+content-hash = "dd0c0d35ac88549c9f6501e851b9dae7f60a70d754b03ed3b196e1e44737e275"

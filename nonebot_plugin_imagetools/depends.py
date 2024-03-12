@@ -7,8 +7,8 @@ from nonebot.adapters import Bot, Event, Message
 from nonebot.log import logger
 from nonebot.params import CommandArg, Depends
 from nonebot.typing import T_State
-from nonebot_plugin_alconna import Image, UniMessage, image_fetch
-from nonebot_plugin_alconna.uniseg.segment import reply_handle
+from nonebot_plugin_alconna import Image, UniMessage
+from nonebot_plugin_alconna.uniseg.tools import image_fetch, reply_fetch
 from pil_utils import BuildImage
 from typing_extensions import Literal
 
@@ -23,8 +23,8 @@ def Imgs():
         if msg:
             uni_msg = await UniMessage.generate(message=msg)
         uni_msg_with_reply = UniMessage()
-        if reply := await reply_handle(event, bot):
-            if isinstance(reply.msg, Message) and reply.msg:
+        if reply := await reply_fetch(event, bot):
+            if reply.msg and isinstance(reply.msg, Message):
                 uni_msg_with_reply = await UniMessage.generate(message=reply.msg)
         uni_msg_with_reply.extend(uni_msg)
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_imagetools"
-version = "0.4.0"
+version = "0.4.1"
 description = "Nonebot2 简单图片操作插件"
 authors = ["meetwq <meetwq@gmail.com>"]
 license = "MIT"
@@ -11,7 +11,7 @@ repository = "https://github.com/noneplugin/nonebot-plugin-imagetools"
 [tool.poetry.dependencies]
 python = "^3.8"
 nonebot2 = "^2.2.0"
-nonebot-plugin-alconna = ">=0.38.0,<1.0.0"
+nonebot-plugin-alconna = ">=0.40.1,<1.0.0"
 httpx = ">=0.20.0,<1.0.0"
 Pillow = "^10.0.0"
 pil-utils = "^0.1.8"
