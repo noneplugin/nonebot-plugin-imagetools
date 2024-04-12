@@ -21,11 +21,14 @@ def Imgs():
 
         uni_msg = UniMessage()
         if msg:
-            uni_msg = await UniMessage.generate(message=msg)
+            uni_msg = UniMessage.generate_without_reply(message=msg)
         uni_msg_with_reply = UniMessage()
-        if reply := await reply_fetch(event, bot):
-            if reply.msg and isinstance(reply.msg, Message):
-                uni_msg_with_reply = await UniMessage.generate(message=reply.msg)
+        if (
+            (reply := await reply_fetch(event, bot))
+            and reply.msg
+            and isinstance(reply.msg, Message)
+        ):
+            uni_msg_with_reply = UniMessage.generate_without_reply(message=reply.msg)
         uni_msg_with_reply.extend(uni_msg)
 
         for seg in uni_msg_with_reply:
