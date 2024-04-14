@@ -30,10 +30,36 @@ DRIVER=~fastapi+~httpx+~websockets
 
 ### 配置项
 
-#### `imagetools_zip_threshold`
+#### `imagetools_multiple_image_config`
+ - 类型：[MultipleImageConfig](https://github.com/noneplugin/nonebot-plugin-imagetools/blob/main/nonebot_plugin_imagetools/config.py)
+ - 说明：输出多张图片时的发送方式
+
+`MultipleImageConfig` 中的具体配置项：
+
+##### `send_one_by_one`
+ - 类型：`bool`
+ - 默认：`False`
+ - 说明：是否逐个发送图片，默认为 `False`，即一次性发送所有图片
+
+##### `direct_send_threshold`
  - 类型：`int`
- - 默认：`20`
- - 说明：输出图片数量大于该数目时，打包为zip文件并上传
+ - 默认：`10`
+ - 说明：输出图片数量大于该数目时，不再直接发送，视配置以文件或合并转发消息的形式发送
+
+##### `send_zip_file`
+ - 类型：`bool`
+ - 默认：`True`
+ - 说明：输出图片数量大于 `direct_send_threshold` 时，是否打包为zip以文件形式发送
+
+##### `send_forward_msg`
+ - 类型：`bool`
+ - 默认：`False`
+ - 说明：输出图片数量大于 `direct_send_threshold` 时，是否发送合并转发消息
+
+配置示例：
+```
+imagetools_multiple_image_config={"send_one_by_one":false,"direct_send_threshold":10,"send_zip_file":true,"send_forward_msg":true}
+```
 
 
 > [!NOTE]
