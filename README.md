@@ -58,7 +58,14 @@ DRIVER=~fastapi+~httpx+~websockets
 
 配置示例：
 ```
-imagetools_multiple_image_config={"send_one_by_one":false,"direct_send_threshold":10,"send_zip_file":true,"send_forward_msg":true}
+imagetools_multiple_image_config='
+{
+  "send_one_by_one": false,
+  "direct_send_threshold": 10,
+  "send_zip_file": true,
+  "send_forward_msg": true
+}
+'
 ```
 
 

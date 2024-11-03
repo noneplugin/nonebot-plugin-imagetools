@@ -54,30 +54,33 @@ async def _():
 
 
 def help_image() -> BytesIO:
-    def cmd_text(commands: list[Command], start: int = 1) -> str:
-        texts = []
-        for i, command in enumerate(commands):
-            text = f"{i + start}. " + "/".join(command.keywords)
-            texts.append(text)
-        return "\n".join(texts)
-
     head_text = "简单图片操作，支持的操作："
     head = Text2Image.from_text(head_text, 30, font_style="bold").to_image(
         padding=(20, 10)
     )
-
-    imgs: list[IMG] = []
+    col_imgs: list[IMG] = []
     col_num = 2
     num_per_col = math.ceil(len(commands) / col_num)
     for idx in range(0, len(commands), num_per_col):
-        text = cmd_text(commands[idx : idx + num_per_col], start=idx + 1)
-        imgs.append(Text2Image.from_text(text, 30).to_image(padding=(20, 10)))
-    w = max(sum(img.width for img in imgs), head.width)
-    h = head.height + max(img.height for img in imgs)
+        text_imgs: list[IMG] = []
+        for i, command in enumerate(commands[idx : idx + num_per_col]):
+            text = f"{idx + i + 1}. " + "/".join(command.keywords)
+            text_img = Text2Image.from_text(text, 30).to_image()
+            text_imgs.append(text_img)
+        w = max(img.width for img in text_imgs) + 40
+        h = sum(img.height for img in text_imgs) + 20
+        col_img = BuildImage.new("RGBA", (w, h), "white")
+        current_h = 10
+        for img in text_imgs:
+            col_img.paste(img, (20, current_h), alpha=True)
+            current_h += img.height
+        col_imgs.append(col_img.image)
+    w = max(sum(img.width for img in col_imgs), head.width)
+    h = head.height + max(img.height for img in col_imgs)
     frame = BuildImage.new("RGBA", (w, h), "white")
     frame.paste(head, alpha=True)
     current_w = 0
-    for img in imgs:
+    for img in col_imgs:
         frame.paste(img, (current_w, head.height), alpha=True)
         current_w += img.width
     return frame.save_jpg()
