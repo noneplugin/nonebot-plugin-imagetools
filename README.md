@@ -118,4 +118,4 @@ imagetools_multiple_image_config='
  - 九宫格
  - 横向拼接 + 至少两张图片
  - 纵向拼接 + 至少两张图片
- - 文字转图 + 文字，支持少量BBcode
+ - 文字转图 + 文字，支持少量BBcode，详见 [pil-utils](https://github.com/MeetWq/pil-utils)
