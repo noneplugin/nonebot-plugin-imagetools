@@ -22,6 +22,8 @@ class MultipleImageConfig(BaseModel):
 
 
 class Config(BaseModel):
+    imagetools_gif_max_size: float = 10
+    imagetools_gif_max_frames: int = 100
     imagetools_multiple_image_config: MultipleImageConfig = MultipleImageConfig()
 
 

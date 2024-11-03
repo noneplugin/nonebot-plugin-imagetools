@@ -30,6 +30,16 @@ DRIVER=~fastapi+~httpx+~websockets
 
 ### 配置项
 
+#### `imagetools_gif_max_size`
+ - 类型：`float`
+ - 默认：10
+ - 说明：限制生成的 gif 文件大小，单位为 Mb
+
+#### `imagetools_gif_max_frames`
+ - 类型：`int`
+ - 默认：100
+ - 说明：限制生成的 gif 文件帧数
+
 #### `imagetools_multiple_image_config`
  - 类型：[MultipleImageConfig](https://github.com/noneplugin/nonebot-plugin-imagetools/blob/main/nonebot_plugin_imagetools/config.py)
  - 说明：输出多张图片时的发送方式

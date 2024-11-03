@@ -11,7 +11,7 @@ from pil_utils.gradient import ColorStop, LinearGradient
 from pil_utils.typing import ColorType
 
 from .color_table import color_table
-from .utils import Maker, get_avg_duration, make_jpg_or_gif, save_gif, split_gif
+from .utils import Maker, get_avg_duration, make_png_or_gif, save_gif, split_gif
 
 colors = "|".join(colormap.keys())
 color_pattern_str = rf"#[a-fA-F0-9]{{6}}|{colors}"
@@ -21,20 +21,24 @@ color_pattern_num = rf"(?:rgb)?\(?\s*{num_256}[\s,]+{num_256}[\s,]+{num_256}\s*\
 
 
 def flip_horizontal(img: BuildImage):
-    return make_jpg_or_gif(img, lambda img: img.transpose(Transpose.FLIP_LEFT_RIGHT))
+    return make_png_or_gif(
+        [img], lambda imgs: imgs[0].transpose(Transpose.FLIP_LEFT_RIGHT)
+    )
 
 
 def flip_vertical(img: BuildImage):
-    return make_jpg_or_gif(img, lambda img: img.transpose(Transpose.FLIP_TOP_BOTTOM))
+    return make_png_or_gif(
+        [img], lambda imgs: imgs[0].transpose(Transpose.FLIP_TOP_BOTTOM)
+    )
 
 
 def grey(img: BuildImage):
-    return make_jpg_or_gif(img, lambda img: img.convert("L"))
+    return make_png_or_gif([img], lambda imgs: imgs[0].convert("L"))
 
 
 def rotate(num: Optional[int], img: BuildImage):
     angle = num or 90
-    return make_jpg_or_gif(img, lambda img: img.rotate(angle, expand=True))
+    return make_png_or_gif([img], lambda imgs: imgs[0].rotate(angle, expand=True))
 
 
 def resize(arg: str, img: BuildImage):
@@ -46,17 +50,17 @@ def resize(arg: str, img: BuildImage):
         w = match1.group(1)
         h = match1.group(2)
         if not w and h:
-            make = lambda img: img.resize_height(int(h))
+            make = lambda imgs: imgs[0].resize_height(int(h))
         elif w and not h:
-            make = lambda img: img.resize_width(int(w))
+            make = lambda imgs: imgs[0].resize_width(int(w))
         elif w and h:
-            make = lambda img: img.resize((int(w), int(h)))
+            make = lambda imgs: imgs[0].resize((int(w), int(h)))
     elif match2:
         ratio = int(match2.group(1)) / 100
-        make = lambda img: img.resize((int(w * ratio), int(h * ratio)))
+        make = lambda imgs: imgs[0].resize((int(w * ratio), int(h * ratio)))
     if not make:
         return "请使用正确的尺寸格式，如：100x100、100x、50%"
-    return make_jpg_or_gif(img, make)
+    return make_png_or_gif([img], make)
 
 
 def crop(arg: str, img: BuildImage):
@@ -67,52 +71,54 @@ def crop(arg: str, img: BuildImage):
     if match1:
         w = int(match1.group(1))
         h = int(match1.group(2))
-        make = lambda img: img.resize_canvas((w, h), bg_color="white")
+        make = lambda imgs: imgs[0].resize_canvas((w, h), bg_color="white")
     elif match2:
         wp = int(match2.group(1))
         hp = int(match2.group(2))
         size = min(w / wp, h / hp)
-        make = lambda img: img.resize_canvas((int(wp * size), int(hp * size)))
+        make = lambda imgs: imgs[0].resize_canvas((int(wp * size), int(hp * size)))
     if not make:
         return "请使用正确的裁剪格式，如：100x100、2:1"
-    return make_jpg_or_gif(img, make)
+    return make_png_or_gif([img], make)
 
 
 def invert(img: BuildImage):
-    def make(img: BuildImage) -> BuildImage:
+    def make(imgs: list[BuildImage]) -> BuildImage:
+        img = imgs[0]
         result = BuildImage.new("RGB", img.size, "white")
         result.paste(img, alpha=True)
         return BuildImage(ImageOps.invert(result.image))
 
-    return make_jpg_or_gif(img, make)
+    return make_png_or_gif([img], make)
 
 
 def contour(img: BuildImage):
-    return make_jpg_or_gif(img, lambda img: img.filter(ImageFilter.CONTOUR))
+    return make_png_or_gif([img], lambda imgs: imgs[0].filter(ImageFilter.CONTOUR))
 
 
 def emboss(img: BuildImage):
-    return make_jpg_or_gif(img, lambda img: img.filter(ImageFilter.EMBOSS))
+    return make_png_or_gif([img], lambda imgs: imgs[0].filter(ImageFilter.EMBOSS))
 
 
 def blur(img: BuildImage):
-    return make_jpg_or_gif(img, lambda img: img.filter(ImageFilter.BLUR))
+    return make_png_or_gif([img], lambda imgs: imgs[0].filter(ImageFilter.BLUR))
 
 
 def sharpen(img: BuildImage):
-    return make_jpg_or_gif(img, lambda img: img.filter(ImageFilter.SHARPEN))
+    return make_png_or_gif([img], lambda imgs: imgs[0].filter(ImageFilter.SHARPEN))
 
 
 def pixelate(num: Optional[int], img: BuildImage):
     num = num or 8
 
-    def make(img: BuildImage) -> BuildImage:
+    def make(imgs: list[BuildImage]) -> BuildImage:
+        img = imgs[0]
         image = img.image
         image = image.resize((img.width // num, img.height // num), resample=0)
         image = image.resize(img.size, resample=0)
         return BuildImage(image)
 
-    return make_jpg_or_gif(img, make)
+    return make_png_or_gif([img], make)
 
 
 def color_mask(arg: str, img: BuildImage):
@@ -125,7 +131,7 @@ def color_mask(arg: str, img: BuildImage):
         color = color_table[arg]
     else:
         return "请使用正确的颜色格式，如：#66ccff、red、红色、102,204,255"
-    return make_jpg_or_gif(img, lambda img: img.color_mask(color))
+    return make_png_or_gif([img], lambda imgs: imgs[0].color_mask(color))
 
 
 def color_image(arg: str):
@@ -138,7 +144,7 @@ def color_image(arg: str):
         color = color_table[arg]
     else:
         return "请使用正确的颜色格式，如：#66ccff、red、红色、102,204,255"
-    return BuildImage.new("RGB", (500, 500), color).save_jpg()
+    return BuildImage.new("RGB", (500, 500), color).save_png()
 
 
 def gradient_image(args: list[str]):
@@ -185,30 +191,32 @@ def gradient_image(args: list[str]):
         [ColorStop(i / (len(colors) - 1), color) for i, color in enumerate(colors)],
     )
     img = gradient.create_image((img_w, img_h))
-    return BuildImage(img).save_jpg()
+    return BuildImage(img).save_png()
 
 
 def gif_reverse(img: BuildImage):
     image = img.image
-    if getattr(image, "is_animated", False):
-        frames = split_gif(image)
-        duration = get_avg_duration(image) / 1000
-        return save_gif(frames[::-1], duration)
+    if not getattr(image, "is_animated", False):
+        return "请发送 gif 格式的图片"
+    frames = split_gif(image)
+    duration = get_avg_duration(image) / 1000
+    return save_gif(frames[::-1], duration)
 
 
 def gif_obverse_reverse(img: BuildImage):
     image = img.image
-    if getattr(image, "is_animated", False):
-        frames = split_gif(image)
-        duration = get_avg_duration(image) / 1000
-        frames = frames + frames[-2::-1]
-        return save_gif(frames, duration)
+    if not getattr(image, "is_animated", False):
+        return "请发送 gif 格式的图片"
+    frames = split_gif(image)
+    duration = get_avg_duration(image) / 1000
+    frames = frames + frames[-2::-1]
+    return save_gif(frames, duration)
 
 
 def gif_change_fps(arg: str, img: BuildImage):
     image = img.image
     if not getattr(image, "is_animated", False):
-        return
+        return "请发送 gif 格式的图片"
     duration = get_avg_duration(image) / 1000
     p_float = r"\d{0,3}\.?\d{1,3}"
     if match := re.fullmatch(rf"({p_float})(?:x|X|倍速?)", arg):
@@ -235,9 +243,10 @@ def gif_change_fps(arg: str, img: BuildImage):
 
 def gif_split(img: BuildImage):
     image = img.image
-    if getattr(image, "is_animated", False):
-        frames = split_gif(image)
-        return [BuildImage(frame).save_png() for frame in frames]
+    if not getattr(image, "is_animated", False):
+        return "请发送 gif 格式的图片"
+    frames = split_gif(image)
+    return [BuildImage(frame).save_png() for frame in frames]
 
 
 def gif_join(num: Optional[int], imgs: list[BuildImage]):
@@ -291,32 +300,36 @@ def horizontal_join(imgs: list[BuildImage]):
     if len(imgs) < 2:
         return "图片拼接至少需要2张图片"
 
-    spacing = 10
-    img_h = min([img.height for img in imgs])
-    imgs = [img.resize((img.width * img_h // img.height, img_h)) for img in imgs]
-    img_w = sum([img.width for img in imgs]) + spacing * (len(imgs) - 1)
-    frame = BuildImage.new("RGB", (img_w, img_h), "white")
-    x = 0
-    for img in imgs:
-        frame.paste(img, (x, 0))
-        x += img.width + spacing
-    return frame.save_jpg()
+    def make(imgs: list[BuildImage]) -> BuildImage:
+        img_h = min([img.height for img in imgs])
+        imgs = [img.resize((img.width * img_h // img.height, img_h)) for img in imgs]
+        img_w = sum([img.width for img in imgs])
+        frame = BuildImage.new("RGB", (img_w, img_h), "white")
+        x = 0
+        for img in imgs:
+            frame.paste(img, (x, 0))
+            x += img.width
+        return frame
+
+    return make_png_or_gif(imgs, make)
 
 
 def vertical_join(imgs: list[BuildImage]):
     if len(imgs) < 2:
         return "图片拼接至少需要2张图片"
 
-    spacing = 10
-    img_w = min([img.width for img in imgs])
-    imgs = [img.resize((img_w, img.height * img_w // img.width)) for img in imgs]
-    img_h = sum([img.height for img in imgs]) + spacing * (len(imgs) - 1)
-    frame = BuildImage.new("RGB", (img_w, img_h), "white")
-    y = 0
-    for img in imgs:
-        frame.paste(img, (0, y))
-        y += img.height + spacing
-    return frame.save_jpg()
+    def make(imgs: list[BuildImage]) -> BuildImage:
+        img_w = min([img.width for img in imgs])
+        imgs = [img.resize((img_w, img.height * img_w // img.width)) for img in imgs]
+        img_h = sum([img.height for img in imgs])
+        frame = BuildImage.new("RGB", (img_w, img_h), "white")
+        y = 0
+        for img in imgs:
+            frame.paste(img, (0, y))
+            y += img.height
+        return frame
+
+    return make_png_or_gif(imgs, make)
 
 
 def t2p(arg: str):
