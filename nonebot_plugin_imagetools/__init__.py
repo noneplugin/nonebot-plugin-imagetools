@@ -4,26 +4,32 @@ import tempfile
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
-from typing import List, Union
 from zipfile import ZIP_BZIP2, ZipFile
 
-from nonebot import on_command, require
+from nonebot import require
 from nonebot.adapters import Bot, Event
 from nonebot.matcher import Matcher
-from nonebot.params import Depends
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
-from nonebot.typing import T_Handler
+from nonebot.typing import T_State
 from nonebot.utils import run_sync
 from PIL.Image import Image as IMG
 from pil_utils import BuildImage, Text2Image
 
 require("nonebot_plugin_alconna")
 
-from nonebot_plugin_alconna import CustomNode, Image, Reference, UniMessage
+from nonebot_plugin_alconna import (
+    AlcMatches,
+    Alconna,
+    CustomNode,
+    Image,
+    UniMessage,
+    on_alconna,
+)
+from nonebot_plugin_alconna.builtins.extensions.reply import ReplyMergeExtension
+from nonebot_plugin_alconna.uniseg.tools import image_fetch
 
+from .command import Command, commands
 from .config import Config, imagetools_config
-from .data_source import commands
-from .utils import Command
 
 __plugin_meta__ = PluginMetadata(
     name="图片操作",
@@ -33,28 +39,34 @@ __plugin_meta__ = PluginMetadata(
     homepage="https://github.com/noneplugin/nonebot-plugin-imagetools",
     config=Config,
     supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna"),
-    extra={
-        "example": "旋转 [图片]",
-    },
 )
 
 
-help_cmd = on_command("图片操作", aliases={"图片工具"}, block=True, priority=12)
+help_cmd = on_alconna(
+    "图片操作", aliases={"图片工具"}, block=True, priority=13, use_cmd_start=True
+)
 
 
-@run_sync
+@help_cmd.handle()
+async def _():
+    img = await run_sync(help_image)()
+    await UniMessage.image(raw=img).send()
+
+
 def help_image() -> BytesIO:
-    def cmd_text(commands: List[Command], start: int = 1) -> str:
+    def cmd_text(commands: list[Command], start: int = 1) -> str:
         texts = []
-        for i, meme in enumerate(commands):
-            text = f"{i + start}. " + "/".join(meme.keywords)
+        for i, command in enumerate(commands):
+            text = f"{i + start}. " + "/".join(command.keywords)
             texts.append(text)
         return "\n".join(texts)
 
     head_text = "简单图片操作，支持的操作："
-    head = Text2Image.from_text(head_text, 30, weight="bold").to_image(padding=(20, 10))
+    head = Text2Image.from_text(head_text, 30, font_style="bold").to_image(
+        padding=(20, 10)
+    )
 
-    imgs: List[IMG] = []
+    imgs: list[IMG] = []
     col_num = 2
     num_per_col = math.ceil(len(commands) / col_num)
     for idx in range(0, len(commands), num_per_col):
@@ -71,42 +83,58 @@ def help_image() -> BytesIO:
     return frame.save_jpg()
 
 
-@help_cmd.handle()
-async def _():
-    img = await help_image()
-    await UniMessage.image(raw=img).send()
+def create_matcher(command: Command):
+    command_matcher = on_alconna(
+        Alconna(command.keywords[0], command.args),
+        aliases=set(command.keywords[1:]),
+        block=True,
+        priority=13,
+        use_cmd_start=True,
+        extensions=[ReplyMergeExtension()],
+    )
 
-
-def handler(command: Command) -> T_Handler:
-    async def handle(
+    @command_matcher.handle()
+    async def _(
         bot: Bot,
         event: Event,
+        state: T_State,
         matcher: Matcher,
-        res: Union[str, BytesIO, List[BytesIO]] = Depends(command.func),
+        alc_matches: AlcMatches,
     ):
-        if isinstance(res, str):
-            await matcher.finish(res)
-        elif isinstance(res, BytesIO):
-            await UniMessage.image(raw=res).send()
-        else:
-            await send_multiple_images(bot, event, command, res)
+        async def fetch_image(image: Image):
+            content = await image_fetch(event, bot, state, image)
+            if content:
+                return BuildImage.open(BytesIO(content))
+            await matcher.finish("图片下载失败")
 
-    return handle
+        args = alc_matches.all_matched_args
+        if image := args.get("img"):
+            args["img"] = await fetch_image(image)
+        if images := args.get("imgs"):
+            args["imgs"] = [await fetch_image(image) for image in images]
+
+        result = await run_sync(command.func)(**args)
+
+        if isinstance(result, str):
+            await matcher.finish(result)
+        elif isinstance(result, BytesIO):
+            await UniMessage.image(raw=result).send()
+        elif isinstance(result, list):
+            await send_multiple_images(bot, event, command, result)
+        else:
+            await matcher.finish("出错了，请稍后再试")
 
 
 def create_matchers():
     for command in commands:
-        matcher = on_command(
-            command.keywords[0], aliases=set(command.keywords), block=True, priority=12
-        )
-        matcher.append_handler(handler(command))
+        create_matcher(command)
 
 
 create_matchers()
 
 
 async def send_multiple_images(
-    bot: Bot, event: Event, command: Command, images: List[BytesIO]
+    bot: Bot, event: Event, command: Command, images: list[BytesIO]
 ):
     config = imagetools_config.imagetools_multiple_image_config
 
@@ -128,7 +156,7 @@ async def send_multiple_images(
             await send_forward_msg(bot, event, images)
 
 
-def zip_images(files: List[BytesIO]):
+def zip_images(files: list[BytesIO]):
     output = BytesIO()
     with ZipFile(output, "w", ZIP_BZIP2) as zip_file:
         for i, file in enumerate(files):
@@ -178,7 +206,7 @@ async def send_file(bot: Bot, event: Event, filename: str, content: bytes):
 async def send_forward_msg(
     bot: Bot,
     event: Event,
-    images: List[BytesIO],
+    images: list[BytesIO],
 ):
     try:
         from nonebot.adapters.onebot.v11 import Bot as V11Bot
@@ -192,7 +220,7 @@ async def send_forward_msg(
             event: V11Event,
             name: str,
             uin: str,
-            msgs: List[V11Msg],
+            msgs: list[V11Msg],
         ):
             messages = [
                 {"type": "node", "data": {"name": name, "uin": uin, "content": msg}}
@@ -225,13 +253,9 @@ async def send_forward_msg(
     uid = bot.self_id
     name = "imagetools"
     time = datetime.now()
-    await UniMessage(
-        Reference(
-            content=[
-                CustomNode(
-                    uid, name, time, await UniMessage.image(raw=img.getvalue()).export()
-                )
-                for img in images
-            ]
-        )
+    await UniMessage.reference(
+        *[
+            CustomNode(uid, name, UniMessage.image(raw=img.getvalue()), time)
+            for img in images
+        ]
     ).send()
