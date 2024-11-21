@@ -199,7 +199,7 @@ def gif_reverse(img: BuildImage):
     if not getattr(image, "is_animated", False):
         return "请发送 gif 格式的图片"
     frames = split_gif(image)
-    duration = get_avg_duration(image) / 1000
+    duration = get_avg_duration(image)
     return save_gif(frames[::-1], duration)
 
 
@@ -208,7 +208,7 @@ def gif_obverse_reverse(img: BuildImage):
     if not getattr(image, "is_animated", False):
         return "请发送 gif 格式的图片"
     frames = split_gif(image)
-    duration = get_avg_duration(image) / 1000
+    duration = get_avg_duration(image)
     frames = frames + frames[-2::-1]
     return save_gif(frames, duration)
 
@@ -217,7 +217,7 @@ def gif_change_fps(arg: str, img: BuildImage):
     image = img.image
     if not getattr(image, "is_animated", False):
         return "请发送 gif 格式的图片"
-    duration = get_avg_duration(image) / 1000
+    duration = get_avg_duration(image)
     p_float = r"\d{0,3}\.?\d{1,3}"
     if match := re.fullmatch(rf"({p_float})(?:x|X|倍速?)", arg):
         duration /= float(match.group(1))
